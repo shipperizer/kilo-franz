@@ -2,7 +2,7 @@
 
 ![test](https://github.com/shipperizer/kilo-franz/workflows/test/badge.svg)
 ![release](https://github.com/shipperizer/kilo-franz/workflows/release/badge.svg)
-[![codecov](https://codecov.io/gh/shipperizer/kilo-franz/branch/master/graph/badge.svg)](https://codecov.io/gh/shipperizer/kilo-franz)
+[![codecov](https://codecov.io/gh/shipperizer/kilo-franz/branch/main/graph/badge.svg)](https://codecov.io/gh/shipperizer/kilo-franz)
 
 Library used for dealing with Kafka consumers and producers
 
@@ -31,7 +31,7 @@ readerCfg := streamConfig.NewReaderConfig(
 	cfg,
 	strings.Split(viper.GetString("kafka.url"), ","),
 	viper.GetString("kafka.consumer.topic"),
-	"labs-audit-api.cgroup",
+	"test-app.cgroup",
 	5,
 )
 reader := core.NewReader(readerCfg)
