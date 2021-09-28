@@ -1,4 +1,4 @@
-# Labs Stream Library
+# Kilo Franz: opinionated Kafka Consumer and Producer code built on top of segmentio/kafka-go library
 
 ![test](https://github.com/shipperizer/kilo-franz/workflows/test/badge.svg)
 ![release](https://github.com/shipperizer/kilo-franz/workflows/release/badge.svg)
