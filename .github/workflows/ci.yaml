@@ -1,0 +1,79 @@
+name: test
+
+on:
+  push:
+    branches:
+    - "main"
+    - "release-v**"
+  pull_request:
+    branches:
+    - "*"
+
+jobs:
+  test:
+    name: Test
+    # This job runs on Linux
+    runs-on: ubuntu-latest
+    container: golang:1.16
+
+    services:
+      zookeeper:
+        image: wurstmeister/zookeeper
+      kafka:
+        image: wurstmeister/kafka
+        env:
+          KAFKA_ADVERTISED_HOST_NAME: kafka
+          KAFKA_CREATE_TOPICS: "test:100:1"
+          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+          KAFKA_PORT: "9092"
+          KAFKA_ADVERTISED_PORT: "9092"
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      localstack:
+        image: localstack/localstack
+        env:
+          SERVICES: secretsmanager
+          AWS_ACCESS_KEY_ID: 0
+          AWS_SECRET_ACCESS_KEY: 0
+          AWS_DEFAULT_REGION: eu-west-1
+          AWS_REGION: eu-west-1
+          DEBUG: 1
+          START_WEB: 0
+          DOCKER_HOST: unix:///var/run/docker.sock
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'      
+      - name: Install AWS CLI,  curl and httpie
+        run: |
+          apt-get update 
+          apt-get install -y curl python3-pip python3 unzip
+          pip3 install --user httpie
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip" 
+          unzip /tmp/awscliv2.zip -d /tmp
+          /tmp/aws/install
+          aws --version
+      - name: Setup secrets
+        run: make secretsmanager
+        env:
+          AWS_ACCESS_KEY_ID: 0
+          AWS_SECRET_ACCESS_KEY: 0
+          AWS_DEFAULT_REGION: eu-west-1
+          SM_HOST: http://localstack:4566
+      - name: Test
+        run: make test
+        env:
+          GO111MODULE: "on"
+          KAFKA_CNX_STRING: kafka:9092
+          KAFKA_TOPIC: test
+          WAIT_TIME_MS: "5000"
+          GO_BIN: ${{ github.workspace }}/app
+          MAIN_DIR: ${{ github.workspace }}
+          AWS_ACCESS_KEY_ID: 0
+          AWS_SECRET_ACCESS_KEY: 0
+          AWS_REGION: eu-west-1
+          AWS_ENDPOINT: http://localstack:4566
+      - uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.out

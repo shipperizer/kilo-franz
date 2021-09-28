@@ -1,0 +1,29 @@
+name: release
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: GoogleCloudPlatform/release-please-action@v2
+        with:
+          release-type: simple
+          package-name: kilo-franz
+        id: release
+      - uses: actions/checkout@v2
+      - name: Workaround for https://github.com/googleapis/release-please/issues/922
+        if: ${{ steps.release.outputs.pr != '' }}    
+        run: |
+          echo "Closing and reopening PR to trigger checks"
+          gh pr close ${{ steps.release.outputs.pr }}
+          gh pr reopen ${{ steps.release.outputs.pr }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+                   
