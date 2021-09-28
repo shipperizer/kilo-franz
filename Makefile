@@ -15,9 +15,7 @@ WAIT_TIME_MS?=2000
 
 
 test: mocks
-	$(GO) test -v ./... -cover -coverprofile coverage.out 
-	# this will be cached, just needed to the test.json
-	$(GO) test -v ./... -cover -coverprofile coverage.out -json > test.json
+	$(GO) test -v ./... -cover -coverprofile coverage.out -covermode=atomic
 
 secretsmanager:
 	- $(AWS) secretsmanager create-secret --endpoint-url $(SM_HOST) --name "test/password" --description "test password" --secret-string '1234'
