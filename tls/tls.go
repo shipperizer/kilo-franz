@@ -105,7 +105,7 @@ func MakeTLS(clientCert, key []byte) (*tls.Config, error) {
 
 	return &tls.Config{
 		RootCAs:            rootCAs,
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: false,
 		Certificates:       []tls.Certificate{cert},
 	}, nil
 }
