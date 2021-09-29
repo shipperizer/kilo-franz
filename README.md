@@ -21,6 +21,7 @@ To have a better look at API reference do `godoc -http=:6060` and then check the
 
 * to create a consumer:
 
+
 ```
 // ChannelConsumer is an implementation of the ConsumerInterface
 // it will work with 1 goroutine taking care of pulling messages and
