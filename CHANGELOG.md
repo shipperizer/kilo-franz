@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.0.1](https://www.github.com/shipperizer/kilo-franz/compare/v1.0.0...v1.0.1) (2021-09-29)
+
+
+### Bug Fixes
+
+* add docs badge, trigger release to upgrade license in pkg.go.dev ([725f5a9](https://www.github.com/shipperizer/kilo-franz/commit/725f5a923297411ac5886ce0ff5e663e5148ec49))
+
 ## 1.0.0 (2021-09-29)
 
 
