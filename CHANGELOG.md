@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://www.github.com/shipperizer/kilo-franz/compare/v1.0.1...v1.1.0) (2021-09-29)
+
+
+### Features
+
+* trigger release to upgrade license in pkg.go.dev ([2772e80](https://www.github.com/shipperizer/kilo-franz/commit/2772e80f306a72580559c79c1538c74f17e1e706))
+
 ### [1.0.1](https://www.github.com/shipperizer/kilo-franz/compare/v1.0.0...v1.0.1) (2021-09-29)
 
 
