@@ -1,17 +1,656 @@
 History of the original repo
 
-commit 4f946639778c981e9f29377f8050eb11baa9ce73
+commit ca9d341f11731ffeabf0bce1036a7d0e3d942b88
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Mon Feb 13 15:41:22 2023 +0000
+
+    ci: use only one kafka with multiple listeners
+
+commit 7efbe9c2b29794a2aae7886958086991238d3353
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Thu Feb 9 08:51:30 2023 +0000
+
+    ci: add kafka sasl cnx string env var
+
+commit a430294449387a07adb2fd467b2e8ab7e986a94c
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Thu Feb 9 08:51:11 2023 +0000
+
+    fix: drop commented code
+
+commit 0be3f3211b86468f762dc985b0bf70eae757679a
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Wed Feb 8 17:06:30 2023 +0000
+
+    feat: implement a sasl config interface
+
+commit 6fd37fc907d93ea05b0201e9143a73fcd0a37a21
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Wed Feb 8 17:05:56 2023 +0000
+
+    feat: reader and writer deal with sasl config during connection renewal
+
+commit b76bc86ea2b952006c16d7516a46f0d950d96eb7
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Wed Feb 8 17:05:33 2023 +0000
+
+    feat: autorefresher passes sasl as well as tls config now
+
+commit 1aa944c8adb7362b943adcda23bd0702863754ba
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Wed Feb 8 17:05:01 2023 +0000
+
+    feat: add sasl config
+
+commit 7f658839485f16e398ce197c78f44c9155788a55
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Mon Feb 6 21:43:43 2023 +0000
+
+    ci: update deps and auxiliary files
+
+commit 3d435f3ae1c61ab1c40f997cc7a95b21bfcbeaf3
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Mon Feb 6 21:41:47 2023 +0000
+
+    feat: tls package updates and introduce vault package
+
+commit 51225db15f928e8e5055386f45f410c083722884
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Mon Feb 6 21:41:19 2023 +0000
+
+    feat: update to follow Renew method changes and interfaces
+
+commit 32f0e1ad455977ce48a67f77f39a99f43b71404d
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Mon Feb 6 21:40:41 2023 +0000
+
+    feat: drop Renew method returning and instead modify in place
+
+commit 6134cd7d92942333abbe870e5492cfb1394faf03
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Mon Feb 6 21:40:15 2023 +0000
+
+    feat: shuffle interfaces around
+
+commit 74a4c8456676ed637b0949def9306cd1be97158b
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Thu Jan 26 10:48:55 2023 +0000
+
+    fix: swap zap for loggerInterface
+
+commit 627acafcca108ac854ee978998684d53dfbb923e
+Merge: 13a05d2 deefee3
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Wed Jan 4 11:59:52 2023 +0000
+
+    Merge pull request #21 from wbd-streaming/release-please--branches--main
+    
+    chore(main): release 2.0.1
+
+commit deefee3e207fd990daf8cae78c4b52a3c5e1f958
+Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+Date:   Wed Jan 4 11:53:09 2023 +0000
+
+    chore(main): release 2.0.1
+
+commit 13a05d25b94b029a966eb9cf62232df2184d21db
+Merge: bda66e3 be1db5d
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Wed Jan 4 11:44:39 2023 +0000
+
+    Merge pull request #19 from wbd-streaming/dev-v2
+    
+    dev v2
+
+commit be1db5d182d11cbf469dda7e90537904e616a095
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Wed Jan 4 11:10:01 2023 +0000
+
+    fix: upgrade paths to use v2
+
+commit dab4ab4e7f062143a45f00f8dbffb10275f9b71f
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Wed Jan 4 11:08:15 2023 +0000
+
+    build: update to v2, following golang practices
+
+commit bda66e3d81be2e2af46a8d1d78fef003c8a68425
+Merge: 8bf8f88 a488435
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Wed Jan 4 10:33:54 2023 +0000
+
+    Merge pull request #17 from wbd-streaming/release-please--branches--main
+    
+    chore(main): release 2.0.0
+
+commit a488435b9e58724ffca6519d4ab79f8e7664ace9
+Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+Date:   Wed Jan 4 10:22:16 2023 +0000
+
+    chore(main): release 2.0.0
+
+commit 8bf8f88a8693ab46121b4f39de6f764f65004f0e
+Merge: 0213626 894d323
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Wed Jan 4 10:21:46 2023 +0000
+
+    Merge pull request #14 from wbd-streaming/lib/crypto
+    
+    fix: change crypto lib to use SSL Mate due to frozen crypto/pkcs12 and lack of sha256 support
+
+commit 894d32371c1492c12a439b2ed89f4aa1b0d2f4c6
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Tue Jan 3 22:15:19 2023 +0000
+
+    fix!: use SSLMate pkcs12 library for better support of sha256 signing alg
+
+commit 0a1da0022aee241b2aee98750bd2f9ec2239548d
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Tue Jan 3 22:13:39 2023 +0000
+
+    ci: add p12 cert with sha256 signing
+
+commit 0213626b74e64abe427721875bf9ed997043487a
+Merge: 160b536 1a6cf99
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Fri Dec 23 10:32:27 2022 +0000
+
+    Merge pull request #13 from wbd-streaming/dependabot/github_actions/ossf/scorecard-action-2.1.0
+    
+    build(deps): bump ossf/scorecard-action from 1.1.1 to 2.1.0
+
+commit 1a6cf99ab0402769de54637333a49119e22a83a0
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Sun Dec 18 15:01:11 2022 +0000
+
+    build(deps): bump ossf/scorecard-action from 1.1.1 to 2.1.0
+    
+    Bumps [ossf/scorecard-action](https://github.com/ossf/scorecard-action) from 1.1.1 to 2.1.0.
+    - [Release notes](https://github.com/ossf/scorecard-action/releases)
+    - [Changelog](https://github.com/ossf/scorecard-action/blob/main/RELEASE.md)
+    - [Commits](https://github.com/ossf/scorecard-action/compare/v1.1.1...v2.1.0)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: ossf/scorecard-action
+      dependency-type: direct:production
+      update-type: version-update:semver-major
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 160b5369b8ba0120dd031723f0adcda3aa75ede9
+Merge: fa1ab63 4cf46b8
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Thu Dec 1 09:08:47 2022 +0000
+
+    Merge pull request #12 from wbd-streaming/release-please--branches--main
+    
+    chore(main): release 1.0.1
+
+commit 4cf46b85f13c1b0b1a90de387cce6f913af120d4
+Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+Date:   Wed Nov 30 16:28:01 2022 +0000
+
+    chore(main): release 1.0.1
+
+commit fa1ab63ad9fba0b4ca5715d2f81eba8577543d94
+Merge: 67c276b 5dcc42d
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Wed Nov 30 16:27:27 2022 +0000
+
+    Merge pull request #11 from wbd-streaming/wbd/pkg
+    
+    wbd/pkg
+
+commit 5dcc42dfa28eaed410972abb8a514b4f28926e67
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Mon Nov 28 12:07:08 2022 +0000
+
+    fix: use wbd-streaming monitoring lib
+
+commit 80501a5d273b55bece9f160aa7b9f6851503037e
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Mon Nov 28 11:36:05 2022 +0000
+
+    ci: fix sonarqube
+
+commit 67c276bd554c534a5832f5d6bc9219701692d975
+Merge: 5b7d6bf 6374036
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Mon Nov 28 11:33:55 2022 +0000
+
+    Merge pull request #10 from wbd-streaming/changelog
+    
+    docs: separate old changelog history
+
+commit 63740364d1711aaabffe76a30aff124e10533ea6
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Mon Nov 28 10:50:49 2022 +0000
+
+    docs: separate old changelog history
+
+commit 5b7d6bfabfd13698315434a40c5de6ba43632e1e
+Merge: be1dc89 ccbbdc3
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Fri Nov 25 11:33:54 2022 +0000
+
+    Merge pull request #9 from wbd-streaming/release-please--branches--main
+    
+    chore(main): release 1.0.0
+
+commit ccbbdc345d89b64516436914539faa4c8f163666
+Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+Date:   Fri Nov 25 10:25:47 2022 +0000
+
+    chore(main): release 1.0.0
+
+commit be1dc89c274d152aed3e666c5ee4a91ba66de6cd
+Merge: 5b2303f f3ced19
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Fri Nov 25 10:24:30 2022 +0000
+
+    Merge pull request #8 from wbd-streaming/wbd/pkg
+    
+    Update package to use newer wbd-streaming path
+
+commit f3ced198e18ba922dfab3886081f36e655336f0e
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Fri Nov 25 09:50:17 2022 +0000
+
+    docs: update refs on readme
+
+commit fb02385d0eda48e9ba7263a200752c3755637b2c
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Fri Nov 25 09:27:16 2022 +0000
+
+    fix: drop old code
+
+commit 7a3d0b412d1e2d480ef3eee79ea25ad7fa24c2d1
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Fri Nov 25 09:22:43 2022 +0000
+
+    ci: use wbd-streaming in GOPRIVATE
+
+commit 93d5252a091a7535e4ebf674a5678a59724edb6d
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Wed Nov 23 16:59:29 2022 +0000
+
+    ci: adjust team settings
+
+commit e8ad669dddda0e1a4e6459778d55892e29091734
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Wed Nov 23 16:58:55 2022 +0000
+
+    fix: use newer repo path for imports
+
+commit d4d9c6b558f7b1c60b400f7342b80d52afd6eced
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Wed Nov 23 16:58:00 2022 +0000
+
+    ci: fix branch triggers to use main
+
+commit f821728750d7774d4cec66e549ea50b283dd7a65
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Wed Nov 23 16:57:39 2022 +0000
+
+    ci: fix omd folder
+
+commit 5b2303fc5162bcc14a292d2387767e0d77fca8fc
+Author: Terraform User <terraform@example.com>
+Date:   Tue Oct 25 08:24:03 2022 +0000
+
+    auto updated file
+
+commit 011ebf06055a1cf5221b60a3beab8d3080324005
+Merge: 2636838 47475ba
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Tue Nov 15 12:46:58 2022 +0000
+
+    Merge pull request #143 from sbs-discovery-sweden/release-please--branches--master
+    
+    chore(master): release 1.5.0
+
+commit 47475ba44a7e53dc8a5b915759ed41a7bb1b2464
+Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+Date:   Tue Nov 15 11:45:53 2022 +0000
+
+    chore(master): release 1.5.0
+
+commit 263683838e13466e70c0ef850b16b4198551f156
+Merge: 24ab203 dc144b6
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Tue Nov 15 11:45:15 2022 +0000
+
+    Merge pull request #142 from sbs-discovery-sweden/tls/p12
+    
+    tls/p12
+
+commit dc144b67471ecb1096720ccd707b363678449bd6
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Tue Nov 15 11:10:33 2022 +0000
+
+    fix: dont b64 decode secretBinary
+
+commit 195e8859642b7c33197c70993bde285eb04e7ac4
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Tue Nov 15 10:46:11 2022 +0000
+
+    feat: support p12 format
+
+commit ba0364f755f32457634c9d1c319f6830499bcd4a
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Tue Nov 15 10:45:49 2022 +0000
+
+    ci: add p12 secret on makefile target
+
+commit 73cd9098b2dcbe8614cd7309891fa908fac1c418
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Tue Nov 15 10:45:32 2022 +0000
+
+    ci: downgrade to use go1.17 as minimum version
+
+commit 24ab2035c2e23c45231d467f65ee310232cc0592
+Merge: 837d91c af79da2
+Author: Ian Rankin <60607903+irdiscovery@users.noreply.github.com>
+Date:   Fri Sep 16 11:39:42 2022 +0100
+
+    Merge pull request #113 from sbs-discovery-sweden/release-please--branches--master
+    
+    chore(master): release 1.4.0
+
+commit af79da2ccb01ca9fa4d006f4870a33bbef55287f
+Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+Date:   Fri Sep 16 10:31:12 2022 +0000
+
+    chore(master): release 1.4.0
+
+commit 837d91c3670aa974ae7c46801869384a3b435a05
+Merge: c1367b5 38989cb
+Author: Ian Rankin <60607903+irdiscovery@users.noreply.github.com>
+Date:   Fri Sep 16 11:30:42 2022 +0100
+
+    Merge pull request #115 from sbs-discovery-sweden/LABS-2195-lb
+    
+    feat: LABS-2195 update dep library
+
+commit 38989cb0de2fff8d18e15f636def801684d48c48
+Author: irdiscovery <ian_rankin@discovery.com>
+Date:   Thu Sep 15 20:17:17 2022 +0100
+
+    feat: LABS-2195 update dep library
+
+commit c1367b5cec79b6af9a52e286e150bbe1a1475d3d
+Merge: bf53bc2 c54ff15
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Thu Sep 15 15:55:49 2022 +0100
+
+    Merge pull request #109 from sbs-discovery-sweden/LABS-2165
+    
+    feat: LABS-2165 update golang version to 1.19
+
+commit c54ff15181560bce8d69dcc05172195250071cff
+Author: irdiscovery <ian_rankin@discovery.com>
+Date:   Wed Sep 14 12:07:36 2022 +0100
+
+    feat: LABS-2165 update golang version to 1.19
+
+commit bf53bc2ffa84c985a9ae7e09ca9cec2bf07ecfdc
+Merge: e158f60 d980987
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Tue Sep 6 15:20:25 2022 +0100
+
+    Merge pull request #104 from sbs-discovery-sweden/release-please--branches--master
+    
+    chore(master): release 1.3.1
+
+commit d9809877bfbc8f1955eab02bfa1eaa9dda8eb3ce
+Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+Date:   Tue Sep 6 14:13:24 2022 +0000
+
+    chore(master): release 1.3.1
+
+commit e158f60dfaa8ac9e1d2d440f488bc607ce00436c
+Merge: d276851 bac6640
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Tue Sep 6 15:12:49 2022 +0100
+
+    Merge pull request #103 from sbs-discovery-sweden/error/handling
+    
+    fix: add error logging
+
+commit bac6640bf5ef6c51a8aea0736ad5374b7a114f7e
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Tue Sep 6 15:05:32 2022 +0100
+
+    fix: add error logging
+
+commit d276851c905d6b3b6c694325f0aabaff57caa276
+Merge: 41acf57 f3155a7
+Author: Mariama <33070292+Mariamakbbh@users.noreply.github.com>
+Date:   Tue Aug 9 15:40:48 2022 +0100
+
+    Merge pull request #69 from sbs-discovery-sweden/now-yaml
+    
+    chore: add operational metadata now.yaml file
+
+commit f3155a7ce87ecda46a46db160267f9cb5cbbed2c
+Author: Mariama <33070292+Mariamakbbh@users.noreply.github.com>
+Date:   Tue Aug 9 14:47:09 2022 +0100
+
+    Update now.yaml
+
+commit 02b07aa4579f5489352f3f15c65f178d52da0dcd
+Author: John Veldboom <john_veldboom@discovery.com>
+Date:   Mon Aug 1 21:36:59 2022 +0000
+
+    chore: add operational metadata now.yaml file
+
+commit 41acf576cb5ece7ef456b2ebcf682907f5e5f650
+Merge: 1794b91 f952858
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Mon Jun 27 17:31:48 2022 +0100
+
+    Merge pull request #44 from sbs-discovery-sweden/dependabot/github_actions/actions/stale-5
+    
+    build(deps): bump actions/stale from 3 to 5
+
+commit f952858a3b3215a93719a7c7c9e6ca69aa17690e
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Mon Jun 27 16:24:46 2022 +0000
+
+    build(deps): bump actions/stale from 3 to 5
+    
+    Bumps [actions/stale](https://github.com/actions/stale) from 3 to 5.
+    - [Release notes](https://github.com/actions/stale/releases)
+    - [Changelog](https://github.com/actions/stale/blob/main/CHANGELOG.md)
+    - [Commits](https://github.com/actions/stale/compare/v3...v5)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: actions/stale
+      dependency-type: direct:production
+      update-type: version-update:semver-major
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 1794b91a278e85bbdddd39c991137fea8a2c2a90
+Merge: 8cbca7a 978cedb
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Mon Jun 27 17:23:59 2022 +0100
+
+    Merge pull request #42 from sbs-discovery-sweden/dependabot/github_actions/ossf/scorecard-action-1.1.1
+    
+    build(deps): bump ossf/scorecard-action from 1.0.4 to 1.1.1
+
+commit 978cedb113a53980636bc1a828f0f9d746f1573e
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Mon Jun 27 16:17:09 2022 +0000
+
+    build(deps): bump ossf/scorecard-action from 1.0.4 to 1.1.1
+    
+    Bumps [ossf/scorecard-action](https://github.com/ossf/scorecard-action) from 1.0.4 to 1.1.1.
+    - [Release notes](https://github.com/ossf/scorecard-action/releases)
+    - [Changelog](https://github.com/ossf/scorecard-action/blob/main/RELEASE.md)
+    - [Commits](https://github.com/ossf/scorecard-action/compare/v1.0.4...v1.1.1)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: ossf/scorecard-action
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 8cbca7a4575bfcde7c29d5a990a93eb7170cc632
+Merge: cb0747f e261bfa
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Mon Jun 27 17:07:38 2022 +0100
+
+    Merge pull request #47 from sbs-discovery-sweden/release-please--branches--master
+    
+    chore(master): release 1.3.0
+
+commit e261bfab00e9c1afc15d475a8f207edbbecb1fc1
+Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+Date:   Mon Jun 27 15:44:14 2022 +0000
+
+    chore(master): release 1.3.0
+
+commit cb0747f1b067220f2e8a81c7c71532d350738f6e
+Merge: e26892e a027084
+Author: Alessandro Cabbia <alexcabb@gmail.com>
+Date:   Mon Jun 27 16:43:40 2022 +0100
+
+    Merge pull request #41 from sbs-discovery-sweden/monitoring/v2
+    
+    monitoring/v2
+
+commit a027084190fcf8dc26ace436cc32244f1562a521
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Mon Jun 27 16:23:45 2022 +0100
+
+    fix: drop satori go.uuid for google.uuid
+
+commit ce8bfe5c080686d1b9ff63812d508a3554f6bcee
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Mon Jun 27 14:40:05 2022 +0100
+
+    build: update deps
+
+commit 61bf614afd23ef877a74735ab1eec61c0f9453d6
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Mon Jun 27 14:17:42 2022 +0100
+
+    ci: standardize ci release
+
+commit 61358efe0104f1a8a91a43c4250e256db7874301
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Fri Jun 24 14:43:30 2022 +0100
+
+    ci: adjust vendoring
+
+commit 04d96a74640a3792e4265028f878d2893470b431
+Author: shipperizer <alexcabb@gmail.com>
+Date:   Fri Jun 24 14:43:22 2022 +0100
+
+    feat: update to monitoring lib v0.4.4
+
+commit 5ecc75f2cc74f5ab91ec5b52de278ce2aaf2abdf
 Author: shipperizer <alexcabb@gmail.com>
 Date:   Thu Sep 2 15:52:27 2021 +0100
 
     ci: fix missing release check
+
+commit e26892e4f9db66944dfa84900a969347da6b1594
+Merge: b909c9a a6c54ba
+Author: Ian Rankin <60607903+irdiscovery@users.noreply.github.com>
+Date:   Mon Feb 21 13:18:21 2022 -0500
+
+    Merge pull request #40 from sbs-discovery-sweden/LABS-1574
+    
+    test: LABS-1574 bump up test coverage
+
+commit a6c54badb439b5f8edc1b1f6bd68a5ae84f5c048
+Author: irdiscovery <ian_rankin@discovery.com>
+Date:   Mon Feb 21 13:05:44 2022 -0500
+
+    test: LABS-1574 change test error format
+
+commit a2250f1de78351cf399cf221ae9077cc6bde3806
+Author: irdiscovery <ian_rankin@discovery.com>
+Date:   Fri Feb 18 05:20:47 2022 -0500
+
+    test: LABS-1574 update release script dependency name
+
+commit 8c63ab232071f10c34240dc26f74267ec73c57cb
+Author: irdiscovery <ian_rankin@discovery.com>
+Date:   Fri Feb 18 05:16:50 2022 -0500
+
+    test: LABS-1574 bump up test coverage
+
+commit b909c9a22a19b43117b3e169a98493372e9bb8d2
+Merge: e48678e 9b1998d
+Author: Ian Rankin <60607903+irdiscovery@users.noreply.github.com>
+Date:   Thu Dec 2 17:40:16 2021 +0000
+
+    Merge pull request #39 from sbs-discovery-sweden/LABS-1290-tee-cmd-fix
+    
+    ci: LABS-1290 fix blank code coverage file output
+
+commit 9b1998d8652e5cef2315249ed2a2a6b15c9453b7
+Author: irdiscovery <ian_rankin@discovery.com>
+Date:   Thu Dec 2 17:27:28 2021 +0000
+
+    ci: LABS-1290 fix makefile test commands
+
+commit cc72af1a7675f1d5b96afe2e36566f0419a7a06f
+Author: irdiscovery <ian_rankin@discovery.com>
+Date:   Thu Dec 2 16:21:03 2021 +0000
+
+    ci: LABS-1290 fix blank code coverage file output
+
+commit e48678e46d0fb0466fe5aea28a16466bcf0491bb
+Merge: 6352d21 1ec7d09
+Author: Ian Rankin <60607903+irdiscovery@users.noreply.github.com>
+Date:   Thu Dec 2 15:04:19 2021 +0000
+
+    Merge pull request #38 from sbs-discovery-sweden/LABS-1290
+    
+    ci: #LABS-1290 switch sonarcube for sonarcloud
+
+commit 1ec7d098f95bf85531bbadb0fa596f1403566291
+Author: irdiscovery <ian_rankin@discovery.com>
+Date:   Thu Dec 2 14:51:40 2021 +0000
+
+    ci: LABS-1290 update sonarcube token and config
+
+commit 1c4b11ba12bec9f36263b857ec58920550df3a08
+Author: irdiscovery <ian_rankin@discovery.com>
+Date:   Thu Nov 25 14:27:09 2021 +0000
+
+    ci: #LABS-1290 exclude test json from test coverage
+
+commit 0e6ebeaee9fc270dcce170b479e82a3d46d5ef56
+Author: irdiscovery <ian_rankin@discovery.com>
+Date:   Thu Nov 25 14:06:05 2021 +0000
+
+    ci: #LABS-1290 add mock exclusion to test coverage json
+
+commit 7f4994a2c3363c385012609063cb89728a5b1935
+Author: irdiscovery <ian_rankin@discovery.com>
+Date:   Thu Nov 25 10:22:30 2021 +0000
+
+    ci: #LABS-1290 switch sonarcube for sonarcloud
 
 commit 6352d21ac96c3848ec980879521384668699bee7
 Merge: cc7eb1b 2bf3518
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Tue Aug 31 13:15:51 2021 +0100
 
-    Merge pull request #35 from ********/release-v1.2.6
+    Merge pull request #35 from sbs-discovery-sweden/release-v1.2.6
     
     chore: release 1.2.6
 
@@ -26,7 +665,7 @@ Merge: ea4fb5c 00f3eba
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Tue Aug 31 12:18:40 2021 +0100
 
-    Merge pull request #36 from ********/fix/empty/msg
+    Merge pull request #36 from sbs-discovery-sweden/fix/empty/msg
     
     fix/empty/msg
 
@@ -47,7 +686,7 @@ Merge: 6deb877 29d5dbb
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Tue Aug 31 10:33:16 2021 +0100
 
-    Merge pull request #34 from ********/fix/empty/msg
+    Merge pull request #34 from sbs-discovery-sweden/fix/empty/msg
     
     fix: don't feed empty messages to the consumer flow function if error
 
@@ -62,7 +701,7 @@ Merge: c6756b1 9e53064
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Thu Aug 12 15:41:20 2021 +0200
 
-    Merge pull request #32 from ********/release-v1.2.5
+    Merge pull request #32 from sbs-discovery-sweden/release-v1.2.5
     
     chore: release 1.2.5
 
@@ -77,7 +716,7 @@ Merge: 9a8c548 99375f9
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Thu Aug 12 15:39:08 2021 +0200
 
-    Merge pull request #31 from ********/fix/sm
+    Merge pull request #31 from sbs-discovery-sweden/fix/sm
     
     fix: remove HostnameImmutable from sm config
 
@@ -92,7 +731,7 @@ Merge: 182b3fb c368fb8
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Wed Aug 4 18:09:42 2021 +0200
 
-    Merge pull request #30 from ********/release-v1.2.4
+    Merge pull request #30 from sbs-discovery-sweden/release-v1.2.4
     
     chore: release 1.2.4
 
@@ -104,10 +743,10 @@ Date:   Wed Aug 4 15:54:54 2021 +0000
 
 commit 182b3fbe0ba0a958f1658ef36e29d895fce7fe39
 Merge: 7cea3ce 62e9ecc
-Author: Xin Jin <xin_jin@**********>
+Author: Xin Jin <xin_jin@discovery.com>
 Date:   Wed Aug 4 16:54:29 2021 +0100
 
-    Merge pull request #29 from ********/fix/refresh_issue
+    Merge pull request #29 from sbs-discovery-sweden/fix/refresh_issue
     
     fix: use previous encoder when it's not nil
 
@@ -128,7 +767,7 @@ Merge: acc954e 41f3ef3
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Jul 30 14:44:23 2021 +0100
 
-    Merge pull request #28 from ********/release-v1.2.3
+    Merge pull request #28 from sbs-discovery-sweden/release-v1.2.3
     
     chore: release 1.2.3
 
@@ -143,7 +782,7 @@ Merge: 4d38d5f 977c1f6
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Jul 30 14:43:42 2021 +0100
 
-    Merge pull request #27 from ********/fix/close
+    Merge pull request #27 from sbs-discovery-sweden/fix/close
     
     fix: allow a producer to be closed multiple times without panicking
 
@@ -158,7 +797,7 @@ Merge: 2149447 1c0e404
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Thu Jul 22 18:44:31 2021 +0100
 
-    Merge pull request #26 from ********/release-v1.2.2
+    Merge pull request #26 from sbs-discovery-sweden/release-v1.2.2
     
     chore: release 1.2.2
 
@@ -173,7 +812,7 @@ Merge: 524e0a3 aac0cb7
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Thu Jul 22 18:19:04 2021 +0100
 
-    Merge pull request #25 from ********/lock/autorefresh
+    Merge pull request #25 from sbs-discovery-sweden/lock/autorefresh
     
     lock/autorefresh
 
@@ -212,7 +851,7 @@ Merge: bec68fb db14169
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Wed Jul 21 13:32:42 2021 +0100
 
-    Merge pull request #24 from ********/release-v1.2.1
+    Merge pull request #24 from sbs-discovery-sweden/release-v1.2.1
     
     chore: release 1.2.1
 
@@ -227,7 +866,7 @@ Merge: 85adc3b ac90a09
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Wed Jul 21 13:24:35 2021 +0100
 
-    Merge pull request #23 from ********/LABS-709
+    Merge pull request #23 from sbs-discovery-sweden/LABS-709
     
     LABS 709
 
@@ -248,7 +887,7 @@ Merge: a3a559e b34223c
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Tue Jul 20 15:03:29 2021 +0100
 
-    Merge pull request #21 from ********/release-v1.2.0
+    Merge pull request #21 from sbs-discovery-sweden/release-v1.2.0
     
     chore: release 1.2.0
 
@@ -263,7 +902,7 @@ Merge: 60774a9 3ce571b
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Tue Jul 20 14:12:41 2021 +0100
 
-    Merge pull request #22 from ********/LABS-709
+    Merge pull request #22 from sbs-discovery-sweden/LABS-709
     
     docs: adding comments and func helper
 
@@ -284,7 +923,7 @@ Merge: ac054ae df8705b
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Jul 16 17:40:52 2021 +0100
 
-    Merge pull request #20 from ********/LABS-709
+    Merge pull request #20 from sbs-discovery-sweden/LABS-709
     
     LABS-70(8|9): autorefresh for channeled & standard consumer and publishers
 
@@ -383,7 +1022,7 @@ Merge: 8d17a6e c4cd1a1
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Apr 23 15:23:26 2021 +0100
 
-    Merge pull request #18 from ********/release-v1.1.2
+    Merge pull request #18 from sbs-discovery-sweden/release-v1.1.2
     
     chore: release 1.1.2
 
@@ -398,7 +1037,7 @@ Merge: cc10392 3c5c139
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Apr 23 15:21:20 2021 +0100
 
-    Merge pull request #19 from ********/LABS-723
+    Merge pull request #19 from sbs-discovery-sweden/LABS-723
     
     fix: LABS-723 test commit
 
@@ -413,7 +1052,7 @@ Merge: 9c4b165 759b99d
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Apr 23 15:19:14 2021 +0100
 
-    Merge pull request #17 from ********/jira/release
+    Merge pull request #17 from sbs-discovery-sweden/jira/release
     
     fix: LABS-723 add extra gotcha to docs
 
@@ -428,7 +1067,7 @@ Merge: f5a0fdc 8ff9d92
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Apr 23 15:11:46 2021 +0100
 
-    Merge pull request #16 from ********/release-v1.1.1
+    Merge pull request #16 from sbs-discovery-sweden/release-v1.1.1
     
     chore: release 1.1.1
 
@@ -443,7 +1082,7 @@ Merge: 4ac2369 8f41045
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Apr 23 15:10:57 2021 +0100
 
-    Merge pull request #15 from ********/jira/release
+    Merge pull request #15 from sbs-discovery-sweden/jira/release
     
     [LABS-723] fix docs
 
@@ -458,7 +1097,7 @@ Merge: f5c56ea f5c4908
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Apr 23 15:03:38 2021 +0100
 
-    Merge pull request #14 from ********/release-v1.1.0
+    Merge pull request #14 from sbs-discovery-sweden/release-v1.1.0
     
     chore: release 1.1.0
 
@@ -473,7 +1112,7 @@ Merge: 74fe098 9b10c3b
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Apr 23 15:01:45 2021 +0100
 
-    Merge pull request #13 from ********/test/release
+    Merge pull request #13 from sbs-discovery-sweden/test/release
     
     Test/release
 
@@ -506,7 +1145,7 @@ Merge: da73240 df1e1c7
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Apr 23 14:35:39 2021 +0100
 
-    Merge pull request #12 from ********/stale/action
+    Merge pull request #12 from sbs-discovery-sweden/stale/action
     
     fix: add stale action to close stale issues/prs
 
@@ -521,7 +1160,7 @@ Merge: e76b825 8e8a9d4
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Fri Apr 23 14:22:43 2021 +0100
 
-    Merge pull request #10 from ********/release/action
+    Merge pull request #10 from sbs-discovery-sweden/release/action
     
     feat: add release-please-action for release management
 
@@ -536,7 +1175,7 @@ Merge: 3656d84 7fc00bf
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Tue Apr 13 11:01:27 2021 +0100
 
-    Merge pull request #9 from ********/LABS-713
+    Merge pull request #9 from sbs-discovery-sweden/LABS-713
     
     [release] v1.0.0: upgraded to GOv1.16 and AWS SDK v2
 
@@ -563,7 +1202,7 @@ Merge: 63a6f09 571f8ae
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Mon Feb 8 11:56:09 2021 +0000
 
-    Merge pull request #8 from ********/release
+    Merge pull request #8 from sbs-discovery-sweden/release
     
     [release] v0.3.16: release management
 
@@ -578,7 +1217,7 @@ Merge: 404df8e fd647be
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Mon Feb 8 10:44:13 2021 +0000
 
-    Merge pull request #7 from ********/release
+    Merge pull request #7 from sbs-discovery-sweden/release
     
     Release
 
@@ -605,7 +1244,7 @@ Merge: 3eab135 a83d954
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Mon Jan 11 11:19:12 2021 +0000
 
-    Merge pull request #5 from ********/kafka/0.4
+    Merge pull request #5 from sbs-discovery-sweden/kafka/0.4
     
     Upgrade to segmentio/kafka-go@v0.4.8
 
@@ -626,48 +1265,48 @@ Merge: 096273c d5f958c
 Author: Ian Rankin <60607903+irdiscovery@users.noreply.github.com>
 Date:   Wed Nov 25 12:01:16 2020 +0000
 
-    Merge pull request #4 from ********/get-tls-error
+    Merge pull request #4 from sbs-discovery-sweden/get-tls-error
     
     Panic when missing secret
 
 commit d5f958ca22a939633cabf454177ba502d4fc1677
-Author: irdiscovery <ian_rankin@**********>
+Author: irdiscovery <ian_rankin@discovery.com>
 Date:   Wed Nov 25 11:26:00 2020 +0000
 
     Use sirupsen logging to panic
 
 commit 709d2e4ec300a067574e1169ecf61ed44efeeb96
-Author: irdiscovery <ian_rankin@**********>
+Author: irdiscovery <ian_rankin@discovery.com>
 Date:   Tue Nov 24 21:04:18 2020 +0000
 
     Remove error from panic argument
 
 commit 2b7a7f4bb7ab1d44b360b247f21d9e998bb0d827
-Author: irdiscovery <ian_rankin@**********>
+Author: irdiscovery <ian_rankin@discovery.com>
 Date:   Tue Nov 24 17:09:46 2020 +0000
 
     Add change log
 
 commit 99e2b068c7d2184068b21ff05c792e1b854e9f96
-Author: irdiscovery <ian_rankin@**********>
+Author: irdiscovery <ian_rankin@discovery.com>
 Date:   Tue Nov 24 16:57:16 2020 +0000
 
     Revert SecretManagerConfig SMClient field type
 
 commit dc11720dd322bfba77bbb78ca0451adfa9d6581a
-Author: irdiscovery <ian_rankin@**********>
+Author: irdiscovery <ian_rankin@discovery.com>
 Date:   Tue Nov 24 16:54:40 2020 +0000
 
     Update version
 
 commit cb6c8040b09533a8f98d50c8228927764a949d5b
-Author: irdiscovery <ian_rankin@**********>
+Author: irdiscovery <ian_rankin@discovery.com>
 Date:   Tue Nov 24 16:49:52 2020 +0000
 
     Add panic when unable to retrieve secrets
 
 commit a9167bcf84c4ff22391bd60af92d0a114a4685f3
-Author: irdiscovery <ian_rankin@**********>
+Author: irdiscovery <ian_rankin@discovery.com>
 Date:   Tue Nov 24 15:47:30 2020 +0000
 
     Return error from GetTLS
@@ -677,7 +1316,7 @@ Merge: a1b6009 5443219
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Thu Nov 12 10:22:50 2020 +0000
 
-    Merge pull request #3 from ********/LABS-350
+    Merge pull request #3 from sbs-discovery-sweden/LABS-350
     
     [LABS-350] Allow to pass region and debug args to SMClient
 
@@ -698,7 +1337,7 @@ Merge: bba4add a6c0c70
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Mon Nov 2 12:20:03 2020 +0000
 
-    Merge pull request #2 from ********/docs
+    Merge pull request #2 from sbs-discovery-sweden/docs
     
     [DOCS]
 
@@ -719,7 +1358,7 @@ Merge: 42cfa10 99ff92b
 Author: Alessandro Cabbia <alexcabb@gmail.com>
 Date:   Mon Oct 19 12:25:11 2020 +0100
 
-    Merge pull request #1 from ********/test
+    Merge pull request #1 from sbs-discovery-sweden/test
     
     Adding Tests
 
