@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.0](https://github.com/shipperizer/kilo-franz/compare/v1.1.0...v1.2.0) (2023-02-14)
+
+
+### Features
+
+* abstract logger with logging package ([b8c400c](https://github.com/shipperizer/kilo-franz/commit/b8c400c28e5a7e0c91f0a6bcfef42a33130dd2d0))
+* add p12 support ([929fbb3](https://github.com/shipperizer/kilo-franz/commit/929fbb3888eccc1c72a32bde64d12b4c7c615c29))
+* add sasl support ([97ab835](https://github.com/shipperizer/kilo-franz/commit/97ab835adea42528d601f7c54ae157cf832b6cc4))
+* add vault package ([472d30d](https://github.com/shipperizer/kilo-franz/commit/472d30de2e294c0f90b1ae64368f7f16242d4450))
+
+
+### Bug Fixes
+
+* enhance monitoring with a metric implementation to cover gauges ([7256911](https://github.com/shipperizer/kilo-franz/commit/7256911b484ab1d438cda81c33d6f9489e5fbbef))
+
 ## [1.1.0](https://www.github.com/shipperizer/kilo-franz/compare/v1.0.1...v1.1.0) (2021-09-29)
 
 
