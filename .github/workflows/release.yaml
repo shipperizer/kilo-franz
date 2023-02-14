@@ -3,27 +3,27 @@ name: release
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    - main
+    - "release-**" 
+
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: GoogleCloudPlatform/release-please-action@v3
+      - uses: google-github-actions/release-please-action@v3
         with:
           release-type: simple
-          package-name: kilo-franz
+          package-name: ""
         id: release
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Workaround for https://github.com/googleapis/release-please/issues/922
         if: ${{ steps.release.outputs.pr != '' }}    
         run: |
           echo "Closing and reopening PR to trigger checks"
-          gh pr close ${{ steps.release.outputs.pr }} || true
-          gh pr reopen ${{ steps.release.outputs.pr }} || true
+          gh pr close ${{ fromJSON(steps.release.outputs.pr).number }} || true
+          gh pr reopen ${{ fromJSON(steps.release.outputs.pr).number }} || true
+          gh pr merge --auto --merge ${{ fromJSON(steps.release.outputs.pr).number }} || true
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
                    
