@@ -11,7 +11,7 @@ import (
 func TestNewAutoRefreshXConfigImplementsInterface(t *testing.T) {
 	var mutexR sync.RWMutex
 
-	cfg := NewAutoRefreshXConfig(&mutexR, NewConfig(1*time.Hour, nil, nil))
+	cfg := NewAutoRefreshXConfig(&mutexR, NewConfig(1*time.Hour, nil, nil, nil))
 
 	assert := assert.New(t)
 

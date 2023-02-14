@@ -6,21 +6,17 @@ import (
 	"github.com/segmentio/kafka-go"
 
 	"github.com/shipperizer/kilo-franz/config"
-	kiloTLS "github.com/shipperizer/kilo-franz/tls"
 )
 
 // getReader is a helper function to create a kafka.Reader
-func getReader(cfg config.ReaderConfigInterface) *kafka.Reader {
+func getReader(cfg ReaderConfigInterface) *kafka.Reader {
 	c := kafka.ReaderConfig{
 		Brokers:  cfg.GetBootstrapServers(),
 		GroupID:  cfg.GetGroupID(),
 		Topic:    cfg.GetTopic(),
 		MinBytes: 10e3, // 10KB
 		MaxBytes: 10e6, // 10MB,
-		Dialer: &kafka.Dialer{
-			DualStack: true,
-			TLS:       cfg.GetTLS(),
-		},
+		Dialer:   cfg.GetDialer(),
 	}
 
 	return kafka.NewReader(c)
@@ -31,13 +27,13 @@ func getReader(cfg config.ReaderConfigInterface) *kafka.Reader {
 // it implements RefreshableInterface so that can be used by AutoRefreshX
 type Reader struct {
 	reader *kafka.Reader
-	cfg    config.ReaderConfigInterface
+	cfg    ReaderConfigInterface
 }
 
-// Renew creates a new Reader (wrapped in a RefreshableInterface) with the new tls config passed in
-func (r *Reader) Renew(tlsCfg *kiloTLS.TLSConfig, args ...interface{}) config.RefreshableInterface {
+// Renew creates a new kafka.Reader with the new tls and sasl configs passed in and updates the instance
+func (r *Reader) Renew(tlsCfg config.TLSConfigInterface, saslConfig config.SASLConfigInterface, args ...interface{}) {
 	cfg := config.NewReaderConfig(
-		config.NewConfig(r.cfg.GetRefreshTimeout(), tlsCfg, r.cfg.GetLogger()),
+		config.NewConfig(r.cfg.GetRefreshTimeout(), tlsCfg, saslConfig, r.cfg.GetLogger()),
 		r.cfg.GetBootstrapServers(),
 		r.cfg.GetTopic(),
 		r.cfg.GetGroupID(),
@@ -45,7 +41,8 @@ func (r *Reader) Renew(tlsCfg *kiloTLS.TLSConfig, args ...interface{}) config.Re
 		r.cfg.GetRefreshTimeout(),
 	)
 
-	return NewReader(cfg)
+	r.reader = getReader(cfg)
+	r.cfg = cfg
 }
 
 // Stats returns a copy of kafka.ReaderStats (will need to be casted)
@@ -72,10 +69,12 @@ func (r *Reader) Get(ctx context.Context) (interface{}, error) {
 	return r.reader, nil
 }
 
-// NewReader creates a new object implementing config.RefreshableInterface
-func NewReader(cfg config.ReaderConfigInterface) config.RefreshableInterface {
-	return &Reader{
-		reader: getReader(cfg),
-		cfg:    cfg,
-	}
+// NewReader creates a new Reader object
+func NewReader(cfg ReaderConfigInterface) *Reader {
+	r := new(Reader)
+
+	r.reader = getReader(cfg)
+	r.cfg = cfg
+
+	return r
 }

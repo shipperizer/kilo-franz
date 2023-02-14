@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/segmentio/kafka-go"
-	"github.com/shipperizer/kilo-franz/monitoring"
-	"go.uber.org/zap"
 
 	"github.com/shipperizer/kilo-franz/config"
 	"github.com/shipperizer/kilo-franz/core"
+	"github.com/shipperizer/kilo-franz/logging"
+	"github.com/shipperizer/kilo-franz/monitoring"
 	"github.com/shipperizer/kilo-franz/refresh"
 )
 
@@ -27,30 +27,32 @@ import (
 // 	cfg,
 // 	strings.Split(viper.GetString("kafka.url"), ","),
 // 	viper.GetString("kafka.consumer.topic"),
-// 	"test-app.cgroup",
+// 	"labs-audit-api.cgroup",
 // 	0,
 // )
 //
 // reader := core.NewReader(readerCfg)
 
 // consumer, err := subscriber.NewStandardConsumer(
-// 	reader,
-// 	dummy.NewService(
-// 		store.NewStore(
-// 			store.StoreTableConfig{
-// 				Logs: fmt.Sprint(tablePrefix, viper.GetString("dynamodb.tables.audit.logs")),
-// 			},
-// 			dynamoClient,
-// 		),
-// 		monitor,
-// 		readerCfg.GetGroupID(),
-// 	),
-// 	monitor,
+//
+//	reader,
+//	dummy.NewService(
+//		store.NewStore(
+//			store.StoreTableConfig{
+//				Logs: fmt.Sprint(tablePrefix, viper.GetString("dynamodb.tables.audit.logs")),
+//			},
+//			dynamoClient,
+//		),
+//		monitor,
+//		readerCfg.GetGroupID(),
+//	),
+//	monitor,
+//
 // )
 //
-// if err != nil {
-// 	panic(err)
-// }
+//	if err != nil {
+//		panic(err)
+//	}
 //
 // consumer.Start()
 //
@@ -84,7 +86,7 @@ type StandardConsumer struct {
 	svc     ServiceInterface
 	monitor monitoring.MonitorInterface
 
-	logger *zap.SugaredLogger
+	logger logging.LoggerInterface
 }
 
 // unwrapReader is a helper methods to remove the different interfaces and reach the final kafka.Reader
@@ -122,7 +124,7 @@ func (c *StandardConsumer) unwrapReader() (*kafka.Reader, error) {
 func (c *StandardConsumer) start() {
 	c.logger.Infof("Listening to kafka on topic %s", c.Stats().Topic)
 
-	metricLabels := map[string]string{
+	tags := map[string]string{
 		"topic":          strings.Join(strings.Split(c.Stats().Topic, "."), "_"),
 		"consumer_group": c.groupID,
 		"service":        c.groupID,
@@ -152,14 +154,23 @@ func (c *StandardConsumer) start() {
 			// RUnlock as first command, as af.Stats blocks as well with an RLock
 			c.mutexReader.RUnlock()
 			cancel()
-			c.monitor.Gauge("lag", c.Stats().Lag, metricLabels)
+
+			if m, err := c.monitor.GetMetric("labs_stream_lag"); err != nil {
+				c.logger.Debugf("Error fetching metric: %s; keep going....", err)
+			} else {
+				m.Set(float64(c.Stats().Lag), tags)
+			}
 
 			if err == context.DeadlineExceeded {
 				c.logger.Debug("context timed out reading from kafka, releasing lock")
 				continue
 			}
 
-			c.monitor.Incr("events", metricLabels)
+			if m, err := c.monitor.GetMetric("labs_stream_events"); err != nil {
+				c.logger.Debugf("Error fetching metric: %s; keep going....", err)
+			} else {
+				m.Inc(tags)
+			}
 
 			if err != nil {
 				c.logger.Errorf("failed fetching kafka message: %s", err)
@@ -169,15 +180,38 @@ func (c *StandardConsumer) start() {
 				msg = kafka.Message{}
 			}
 
+			startTime := time.Now()
+
 			err = c.svc.Flow(msg.Key, msg.Value)
 
+			if m, e := c.monitor.GetMetric("labs_stream_handling_seconds_v1"); e == nil {
+				status := "ok"
+
+				if err != nil {
+					status = "error"
+				}
+
+				m.Observe(time.Since(startTime).Seconds(), map[string]string{"task": c.svc.TaskName(), "service": c.groupID, "status": status})
+			}
+
 			if err != nil {
-				c.monitor.Incr("errors", map[string]string{"task": c.svc.TaskName(), "service": c.groupID})
+				c.logger.Error(err)
+
+				if m, err := c.monitor.GetMetric("labs_stream_errors"); err != nil {
+					c.logger.Debugf("Error fetching metric: %s; keep going....", err)
+				} else {
+					m.Inc(tags)
+				}
+
 				c.logger.Warn("Moving on...")
 				continue
 			}
 
-			c.monitor.Incr("count", map[string]string{"task": c.svc.TaskName(), "service": c.groupID})
+			if m, err := c.monitor.GetMetric("labs_stream_count"); err != nil {
+				c.logger.Debugf("Error fetching metric: %s; keep going....", err)
+			} else {
+				m.Inc(tags)
+			}
 		}
 	}
 }
@@ -196,7 +230,6 @@ func (c *StandardConsumer) Stop() {
 	c.logger.Error("shutting down")
 	c.shutdownCh <- true
 	c.wg.Wait()
-	defer c.logger.Desugar().Sync()
 }
 
 // Stats returns kafka.ReaderStats
@@ -208,8 +241,24 @@ func (c *StandardConsumer) Stats() kafka.ReaderStats {
 	panic("consumer reader is setup incorrectly, not of type *kafka.Reader")
 }
 
+// custom prometheus metrics setup
+// ###################################################################################
+func (c *StandardConsumer) registerMetrics() error {
+	m := []monitoring.MetricInterface{
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_lag", "topic", "consumer_group", "service"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_events", "topic", "consumer_group", "service"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_count", "task", "service"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_time", "task", "service"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_errors", "task", "service"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_batch_timeout", "task", "service"),
+		monitoring.NewMetric(monitoring.HISTOGRAM, "labs_stream_handling_seconds_v1", "task", "service", "status"),
+	}
+
+	return c.monitor.AddMetrics(m...)
+}
+
 // NewStandardConsumer creates an object implementing ConsumerInterface
-func NewStandardConsumer(refreshable config.RefreshableInterface, svc ServiceInterface, monitor monitoring.MonitorInterface) (ConsumerInterface, error) {
+func NewStandardConsumer(refreshable core.RefreshableInterface, svc ServiceInterface, monitor monitoring.MonitorInterface) (*StandardConsumer, error) {
 	consumer := new(StandardConsumer)
 
 	c := refreshable.Config()
@@ -218,7 +267,7 @@ func NewStandardConsumer(refreshable config.RefreshableInterface, svc ServiceInt
 		return nil, fmt.Errorf("config is empty: %v", c)
 	}
 
-	cfg, ok := c.(config.ReaderConfigInterface)
+	cfg, ok := c.(core.ReaderConfigInterface)
 
 	if !ok {
 		return nil, fmt.Errorf("config is non parsable, wrong type, should be config.ReaderConfigInterface: %v", c)
@@ -235,6 +284,8 @@ func NewStandardConsumer(refreshable config.RefreshableInterface, svc ServiceInt
 	consumer.af = refresh.NewAutoRefreshX(context.TODO(), config.NewAutoRefreshXConfig(&consumer.mutexReader, cfg), refreshable, consumer.logger, monitor)
 
 	consumer.logger.Debug("config:", cfg)
+
+	_ = consumer.registerMetrics()
 
 	return consumer, nil
 }

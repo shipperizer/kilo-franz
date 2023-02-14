@@ -6,21 +6,17 @@ import (
 	"github.com/segmentio/kafka-go"
 
 	"github.com/shipperizer/kilo-franz/config"
-	kiloTLS "github.com/shipperizer/kilo-franz/tls"
 )
 
 // getWriter is a helper function to create a kafka.Writer
-func getWriter(cfg config.WriterConfigInterface) *kafka.Writer {
+func getWriter(cfg WriterConfigInterface) *kafka.Writer {
 	return kafka.NewWriter(
 		kafka.WriterConfig{
 			Brokers:  cfg.GetBrokers(),
 			Topic:    cfg.GetTopic(),
 			Balancer: &kafka.LeastBytes{},
 			Async:    cfg.GetAsync(),
-			Dialer: &kafka.Dialer{
-				DualStack: true,
-				TLS:       cfg.GetTLS(),
-			},
+			Dialer:   cfg.GetDialer(),
 		},
 	)
 }
@@ -30,13 +26,13 @@ func getWriter(cfg config.WriterConfigInterface) *kafka.Writer {
 // it implements RefreshableInterface so that can be used by AutoRefreshX
 type Writer struct {
 	writer *kafka.Writer
-	cfg    config.WriterConfigInterface
+	cfg    WriterConfigInterface
 }
 
-// Renew creates a new Writer (wrapped in a RefreshableInterface) with the new tls config passed in
-func (w *Writer) Renew(tlsCfg *kiloTLS.TLSConfig, args ...interface{}) config.RefreshableInterface {
+// Renew creates a new kafka.Writer with the new tls config passed in and updates the instance
+func (w *Writer) Renew(tlsConfig config.TLSConfigInterface, saslConfig config.SASLConfigInterface, args ...interface{}) {
 	cfg := config.NewWriterConfig(
-		config.NewConfig(w.cfg.GetRefreshTimeout(), tlsCfg, w.cfg.GetLogger()),
+		config.NewConfig(w.cfg.GetRefreshTimeout(), tlsConfig, saslConfig, w.cfg.GetLogger()),
 		w.cfg.GetBrokers(),
 		w.cfg.GetTopic(),
 		w.cfg.GetNickname(),
@@ -44,7 +40,8 @@ func (w *Writer) Renew(tlsCfg *kiloTLS.TLSConfig, args ...interface{}) config.Re
 		w.cfg.GetEncoder(),
 	)
 
-	return NewWriter(cfg)
+	w.writer = getWriter(cfg)
+	w.cfg = cfg
 }
 
 // Stats returns a copy of kafka.ReaderStats (will need to be casted)
@@ -71,10 +68,12 @@ func (w *Writer) Get(ctx context.Context) (interface{}, error) {
 	return w.writer, nil
 }
 
-// NewWriter creates a new object implementing config.RefreshableInterface
-func NewWriter(cfg config.WriterConfigInterface) config.RefreshableInterface {
-	return &Writer{
-		writer: getWriter(cfg),
-		cfg:    cfg,
-	}
+// NewWriter creates a new object
+func NewWriter(cfg WriterConfigInterface) *Writer {
+	w := new(Writer)
+
+	w.writer = getWriter(cfg)
+	w.cfg = cfg
+
+	return w
 }

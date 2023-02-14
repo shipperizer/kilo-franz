@@ -6,15 +6,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/shipperizer/kilo-franz/monitoring"
-	"go.uber.org/zap"
-
 	"github.com/shipperizer/kilo-franz/config"
-	kiloTLS "github.com/shipperizer/kilo-franz/tls"
+	"github.com/shipperizer/kilo-franz/core"
+	"github.com/shipperizer/kilo-franz/logging"
+	"github.com/shipperizer/kilo-franz/monitoring"
 )
 
+// channelConfig is used to wrap both tls and sasl configs and send them down the channel
+type channelConfig struct {
+	config.TLSConfigInterface
+	config.SASLConfigInterface
+}
+
 // AutoRefreshX is the object taking care of refreshing tls secrets from secretsmanager
-// can handle both Writer and Reader structs, due to the RefreshableInterface
+// can handle both Writer and Reader structs, due to the core.RefreshableInterface
 // it runs a ticker which when triggered will run the machinery to fetch a new set of secrets
 // and refresh the refreshable object
 // handles the fetching of this object via mutex
@@ -22,17 +27,18 @@ type AutoRefreshX struct {
 	shutdownCh    chan bool
 	refreshTicker *time.Ticker
 	// config
-	configCh  chan *kiloTLS.TLSConfig
-	tlsConfig *kiloTLS.TLSConfig
+	configCh   chan channelConfig
+	tlsConfig  config.TLSConfigInterface
+	saslConfig config.SASLConfigInterface
 	// cached reader/writer object
-	obj config.RefreshableInterface
+	obj core.RefreshableInterface
 
 	mutexFetching sync.Mutex
 	mutexObj      *sync.RWMutex
 
 	monitor monitoring.MonitorInterface
 
-	logger *zap.SugaredLogger
+	logger logging.LoggerInterface
 }
 
 // simply a wrapper around fetch
@@ -52,8 +58,8 @@ func (af *AutoRefreshX) fetch() error {
 
 	// close current reader
 	af.obj.Close()
-	// then replace it with a new one
-	af.obj = af.obj.Renew(af.tlsConfig)
+	// then refresh it with a new one
+	af.obj.Renew(af.tlsConfig, af.saslConfig)
 
 	// TODO @shipperizer evaluate if return is needed
 	return nil
@@ -73,7 +79,8 @@ func (af *AutoRefreshX) autorefresh(ctx context.Context) {
 		case config := <-af.configCh:
 			af.logger.Debugf("Reconfigure with %v", config)
 			// TODO @shipperizer add mutex Lock
-			af.tlsConfig = config
+			af.tlsConfig = config.TLSConfigInterface
+			af.saslConfig = config.SASLConfigInterface
 		case tick := <-af.refreshTicker.C:
 			af.logger.Debugf("Tick at %v", tick)
 
@@ -81,7 +88,12 @@ func (af *AutoRefreshX) autorefresh(ctx context.Context) {
 
 			if err != nil {
 				af.logger.Debugf("refresh has failed: %v", err)
-				af.monitor.Incr("errors", map[string]string{"task": "tls-refresh", "service": af.monitor.GetService()})
+
+				if m, err := af.monitor.GetMetric("labs_stream_errors"); err != nil {
+					af.logger.Debugf("Error fetching metric: %s; keep going....", err)
+				} else {
+					m.Inc(map[string]string{"task": "tls-refresh", "service": af.monitor.GetService()})
+				}
 			} else {
 				af.incrRefreshMetric()
 			}
@@ -100,26 +112,42 @@ func (af *AutoRefreshX) incrRefreshMetric() {
 	}
 
 	switch cfg := c.(type) {
-	case config.WriterConfigInterface:
-		af.monitor.Incr("refresh_publisher_v1", map[string]string{"app": af.monitor.GetService(), "topic": cfg.GetTopic()})
-	case config.ReaderConfigInterface:
-		af.monitor.Incr("refresh_subscriber_v1", map[string]string{"app": af.monitor.GetService(), "topic": cfg.GetTopic(), "consumer_group": cfg.GetGroupID()})
+	case core.WriterConfigInterface:
+		if m, err := af.monitor.GetMetric("labs_stream_refresh_publisher_v1"); err != nil {
+			af.logger.Debugf("Error fetching metric: %s; keep going....", err)
+		} else {
+			m.Inc(map[string]string{"app": af.monitor.GetService(), "topic": cfg.GetTopic()})
+		}
+	case core.ReaderConfigInterface:
+		if m, err := af.monitor.GetMetric("labs_stream_refresh_subscriber_v1"); err != nil {
+			af.logger.Debugf("Error fetching metric: %s; keep going....", err)
+		} else {
+			m.Inc(map[string]string{"app": af.monitor.GetService(), "topic": cfg.GetTopic(), "consumer_group": cfg.GetGroupID()})
+		}
 	default:
 		af.logger.Errorf("object af.obj is of unknown type")
 	}
 }
 
 // Configure allows to pass a new tls config to the autorefresh
-func (af *AutoRefreshX) Configure(ctx context.Context, config *kiloTLS.TLSConfig) {
-	if config != nil {
-		af.configCh <- config
-	} else {
-		af.logger.Errorf("empty config passed: %v", config)
+func (af *AutoRefreshX) Configure(ctx context.Context, tlsConfig config.TLSConfigInterface, saslConfig config.SASLConfigInterface) {
+	if tlsConfig == nil || saslConfig == nil {
+		af.logger.Errorf("empty configs passed - tls: %v - sasl: %v", tlsConfig, saslConfig)
+
+		return
 	}
+
+	c := channelConfig{
+		TLSConfigInterface:  tlsConfig,
+		SASLConfigInterface: saslConfig,
+	}
+
+	af.configCh <- c
+
 }
 
 // Object will return the refreshable object (will need to be casted to Writer or Reader)
-func (af *AutoRefreshX) Object(ctx context.Context) (config.RefreshableInterface, error) {
+func (af *AutoRefreshX) Object(ctx context.Context) (core.RefreshableInterface, error) {
 	if af.obj == nil {
 		af.fetch()
 	}
@@ -128,7 +156,7 @@ func (af *AutoRefreshX) Object(ctx context.Context) (config.RefreshableInterface
 }
 
 // Refresh force a manual refresh of the secrets
-func (af *AutoRefreshX) Refresh(ctx context.Context) (config.RefreshableInterface, error) {
+func (af *AutoRefreshX) Refresh(ctx context.Context) (core.RefreshableInterface, error) {
 	af.refresh(ctx)
 
 	return af.obj, nil
@@ -157,16 +185,29 @@ func (af *AutoRefreshX) Stats() interface{} {
 	return stats
 }
 
+// custom prometheus metrics setup
+// ###################################################################################
+func (af *AutoRefreshX) registerMetrics() error {
+	m := []monitoring.MetricInterface{
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_errors", "task", "service"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_errors_v1", "app", "function", "error"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_refresh_subscriber_v1", "app", "consumer_group", "topic"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_refresh_publisher_v1", "app", "topic"),
+	}
+
+	return af.monitor.AddMetrics(m...)
+}
+
 // NewAutoRefreshX creates an object implementing AutoRefreshXInterface
-func NewAutoRefreshX(ctx context.Context, cfg config.AutoRefreshXConfigInterface, refreshable config.RefreshableInterface, logger *zap.SugaredLogger, monitor monitoring.MonitorInterface) AutoRefreshXInterface {
+func NewAutoRefreshX(ctx context.Context, cfg AutoRefreshXConfigInterface, refreshable core.RefreshableInterface, logger logging.LoggerInterface, monitor monitoring.MonitorInterface) AutoRefreshXInterface {
 	af := new(AutoRefreshX)
 
 	af.mutexObj = cfg.GetMutexObj()
 	// TODO @shipperizer make refresh time configurable
 	af.refreshTicker = time.NewTicker(cfg.GetRefreshTimeout())
-	af.configCh = make(chan *kiloTLS.TLSConfig)
+	af.configCh = make(chan channelConfig)
 	af.shutdownCh = make(chan bool)
-	// set refreshable to the one passed in and cast it to config.RefreshableInterface
+	// set refreshable to the one passed in and cast it to core.RefreshableInterface
 	// line below will panig
 	if refreshable == nil {
 		panic("refreshable object is empty, needs to be a core.Reader or core.Writer")
@@ -174,12 +215,15 @@ func NewAutoRefreshX(ctx context.Context, cfg config.AutoRefreshXConfigInterface
 
 	af.obj = refreshable
 	af.tlsConfig = cfg.GetTLSConfig()
+	af.saslConfig = cfg.GetSASLConfig()
 	af.monitor = monitor
 	af.logger = logger
 
 	if logger == nil {
-		af.logger = config.NewLogger()
+		af.logger = logging.NewLogger()
 	}
+
+	_ = af.registerMetrics()
 
 	go af.autorefresh(ctx)
 

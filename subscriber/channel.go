@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/segmentio/kafka-go"
-	"github.com/shipperizer/kilo-franz/monitoring"
-	"go.uber.org/zap"
 
 	"github.com/shipperizer/kilo-franz/config"
 	"github.com/shipperizer/kilo-franz/core"
+	"github.com/shipperizer/kilo-franz/logging"
+	"github.com/shipperizer/kilo-franz/monitoring"
 	"github.com/shipperizer/kilo-franz/refresh"
 )
 
@@ -27,30 +27,32 @@ import (
 // 	cfg,
 // 	strings.Split(viper.GetString("kafka.url"), ","),
 // 	viper.GetString("kafka.consumer.topic"),
-// 	"test-app.cgroup",
+// 	"labs-audit-api.cgroup",
 // 	5,
 // )
 //
 // reader := core.NewReader(readerCfg)
 
 // consumer, err := subscriber.NewChannelConsumer(
-// 	reader,
-// 	dummy.NewService(
-// 		store.NewStore(
-// 			store.StoreTableConfig{
-// 				Logs: fmt.Sprint(tablePrefix, viper.GetString("dynamodb.tables.audit.logs")),
-// 			},
-// 			dynamoClient,
-// 		),
-// 		monitor,
-// 		readerCfg.GetGroupID(),
-// 	),
-// 	monitor,
+//
+//	reader,
+//	dummy.NewService(
+//		store.NewStore(
+//			store.StoreTableConfig{
+//				Logs: fmt.Sprint(tablePrefix, viper.GetString("dynamodb.tables.audit.logs")),
+//			},
+//			dynamoClient,
+//		),
+//		monitor,
+//		readerCfg.GetGroupID(),
+//	),
+//	monitor,
+//
 // )
 //
-// if err != nil {
-// 	panic(err)
-// }
+//	if err != nil {
+//		panic(err)
+//	}
 //
 // consumer.Start()
 //
@@ -85,7 +87,7 @@ type ChannelConsumer struct {
 	svc     ServiceInterface
 	monitor monitoring.MonitorInterface
 
-	logger *zap.SugaredLogger
+	logger logging.LoggerInterface
 }
 
 // unwrapReader is a helper methods to remove the different interfaces and reach the final kafka.Reader
@@ -121,6 +123,8 @@ func (c *ChannelConsumer) unwrapReader() (*kafka.Reader, error) {
 
 // consume takes care of running an infinite loop and run the service.Flow method
 func (c *ChannelConsumer) consume(workerID int) {
+	tags := map[string]string{"task": c.svc.TaskName(), "service": c.groupID}
+
 	c.logger.Infof("starting worker %v", workerID)
 	for {
 		select {
@@ -129,15 +133,39 @@ func (c *ChannelConsumer) consume(workerID int) {
 			c.wg.Done()
 			return
 		case msg := <-c.messageCh:
+
+			startTime := time.Now()
+
 			err := c.svc.Flow(msg.Key, msg.Value)
 
+			if m, e := c.monitor.GetMetric("labs_stream_handling_seconds_v1"); e == nil {
+				status := "ok"
+
+				if err != nil {
+					status = "error"
+				}
+
+				m.Observe(time.Since(startTime).Seconds(), map[string]string{"task": c.svc.TaskName(), "service": c.groupID, "status": status})
+			}
+
 			if err != nil {
-				c.monitor.Incr("errors", map[string]string{"task": c.svc.TaskName(), "service": c.groupID})
+				c.logger.Error(err)
+
+				if m, err := c.monitor.GetMetric("labs_stream_errors"); err != nil {
+					c.logger.Debugf("Error fetching metric: %s; keep going....", err)
+				} else {
+					m.Inc(tags)
+				}
+
 				c.logger.Warn("Moving on...")
 				continue
 			}
 
-			c.monitor.Incr("count", map[string]string{"task": c.svc.TaskName(), "service": c.groupID})
+			if m, err := c.monitor.GetMetric("labs_stream_count"); err != nil {
+				c.logger.Debugf("Error fetching metric: %s; keep going....", err)
+			} else {
+				m.Inc(tags)
+			}
 		}
 	}
 }
@@ -146,7 +174,7 @@ func (c *ChannelConsumer) consume(workerID int) {
 func (c *ChannelConsumer) read() {
 	c.logger.Infof("Listening to kafka on topic %s", c.Stats().Topic)
 
-	metricLabels := map[string]string{
+	tags := map[string]string{
 		"topic":          strings.ReplaceAll(c.Stats().Topic, ".", "_"),
 		"consumer_group": c.groupID,
 		"service":        c.groupID,
@@ -176,7 +204,11 @@ func (c *ChannelConsumer) read() {
 			c.mutexReader.RUnlock()
 			cancel()
 
-			c.monitor.Gauge("lag", c.Stats().Lag, metricLabels)
+			if m, err := c.monitor.GetMetric("labs_stream_lag"); err != nil {
+				c.logger.Debugf("Error fetching metric: %s; keep going....", err)
+			} else {
+				m.Set(float64(c.Stats().Lag), tags)
+			}
 
 			if err == context.DeadlineExceeded {
 				c.logger.Debug("context timed out reading from kafka, releasing lock")
@@ -190,7 +222,11 @@ func (c *ChannelConsumer) read() {
 				continue
 			}
 
-			c.monitor.Incr("events", metricLabels)
+			if m, err := c.monitor.GetMetric("labs_stream_events"); err != nil {
+				c.logger.Debugf("Error fetching metric: %s; keep going....", err)
+			} else {
+				m.Inc(tags)
+			}
 
 			c.messageCh <- msg
 
@@ -209,7 +245,6 @@ func (c *ChannelConsumer) Stop() {
 	}
 
 	c.wg.Wait()
-	defer c.logger.Desugar().Sync()
 }
 
 // Start creates all the goroutines for read and consume
@@ -232,8 +267,24 @@ func (c *ChannelConsumer) Stats() kafka.ReaderStats {
 	panic("consumer reader is setup incorrectly, not of type *kafka.Reader")
 }
 
+// custom prometheus metrics setup
+// ###################################################################################
+func (c *ChannelConsumer) registerMetrics() error {
+	m := []monitoring.MetricInterface{
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_lag", "topic", "consumer_group", "service"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_events", "topic", "consumer_group", "service"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_count", "task", "service"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_time", "task", "service"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_errors", "task", "service"),
+		monitoring.NewMetric(monitoring.GAUGE, "labs_stream_batch_timeout", "task", "service"),
+		monitoring.NewMetric(monitoring.HISTOGRAM, "labs_stream_handling_seconds_v1", "task", "service", "status"),
+	}
+
+	return c.monitor.AddMetrics(m...)
+}
+
 // NewChannelConsumer creates an object implementing ConsumerInterface
-func NewChannelConsumer(refreshable config.RefreshableInterface, svc ServiceInterface, monitor monitoring.MonitorInterface) (ConsumerInterface, error) {
+func NewChannelConsumer(refreshable core.RefreshableInterface, svc ServiceInterface, monitor monitoring.MonitorInterface) (*ChannelConsumer, error) {
 	consumer := new(ChannelConsumer)
 
 	c := refreshable.Config()
@@ -242,7 +293,7 @@ func NewChannelConsumer(refreshable config.RefreshableInterface, svc ServiceInte
 		return nil, fmt.Errorf("config is empty: %v", c)
 	}
 
-	cfg, ok := c.(config.ReaderConfigInterface)
+	cfg, ok := c.(core.ReaderConfigInterface)
 
 	if !ok {
 		return nil, fmt.Errorf("config is non parsable, wrong type, should be config.ReaderConfigInterface: %v", c)
@@ -261,6 +312,8 @@ func NewChannelConsumer(refreshable config.RefreshableInterface, svc ServiceInte
 	consumer.af = refresh.NewAutoRefreshX(context.TODO(), config.NewAutoRefreshXConfig(&consumer.mutexReader, cfg), refreshable, consumer.logger, monitor)
 
 	consumer.logger.Debug("config:", cfg)
+
+	_ = consumer.registerMetrics()
 
 	return consumer, nil
 }

@@ -38,7 +38,7 @@ func (c *ReaderConfig) GetReadTimeout() time.Duration {
 }
 
 // NewReaderConfig creates a new object implementing ReaderConfigInterface
-func NewReaderConfig(cfg ConfigInterface, bootstrapServers []string, topic, groupID string, noWorkers int, readTimeout time.Duration) ReaderConfigInterface {
+func NewReaderConfig(cfg ConfigInterface, bootstrapServers []string, topic, groupID string, noWorkers int, readTimeout time.Duration) *ReaderConfig {
 	c := ReaderConfig{
 		topic:            topic,
 		groupID:          groupID,

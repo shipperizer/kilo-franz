@@ -1,6 +1,6 @@
 package publisher
 
-import uuid "github.com/satori/go.uuid"
+import uuid "github.com/google/uuid"
 
 // Message is an abstraction based around kafka.Message
 type Message struct {
@@ -26,7 +26,7 @@ func NewMessage(key string, value interface{}) MessageInterface {
 	}
 
 	if key == "" {
-		msg.key = uuid.NewV4().Bytes()
+		msg.key = []byte(uuid.New().String())
 	}
 
 	return msg

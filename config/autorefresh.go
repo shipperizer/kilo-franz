@@ -16,8 +16,8 @@ func (c *AutoRefreshXConfig) GetMutexObj() *sync.RWMutex {
 	return c.mutexObj
 }
 
-// NewAutoRefreshXConfig returns an object implementing AutoRefreshXConfigInterface
-func NewAutoRefreshXConfig(mutexObj *sync.RWMutex, config ConfigInterface) AutoRefreshXConfigInterface {
+// NewAutoRefreshXConfig returns an object implementing refresh.AutoRefreshXConfigInterface
+func NewAutoRefreshXConfig(mutexObj *sync.RWMutex, config ConfigInterface) *AutoRefreshXConfig {
 	return &AutoRefreshXConfig{
 		ConfigInterface: config,
 		mutexObj:        mutexObj,

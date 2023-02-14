@@ -2,6 +2,7 @@ package tls
 
 import (
 	"context"
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
@@ -10,11 +11,12 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
+	pkcs12 "software.sslmate.com/src/go-pkcs12"
 )
 
 // GetTLS produces a TLS object to be used by kafka consumer/producer
 func GetTLS(cfg TLSConfig) (*tls.Config, error) {
-	if cfg.UseTLS == false {
+	if !cfg.UseTLS {
 		return nil, nil
 	}
 
@@ -36,35 +38,42 @@ func GetTLS(cfg TLSConfig) (*tls.Config, error) {
 		// get keys concurrently
 		g, ctx := errgroup.WithContext(ctx)
 
-		g.Go(func() error {
-			var err error
-			// TODO @shipperizer remove config pkg dependency
-			cert, err = GetSMValue(ctx, sm, cfg.SMConfig.CertificateString)
-			log.Debugf("Certificate: %s", cert)
-			return err
-		})
+		if cfg.UseP12 {
+			g.Go(func() error {
+				var err error
+				cert, err = GetSMValue(ctx, sm, cfg.SMConfig.P12String)
+				log.Debugf("Certificate: %s", cert)
+				return err
+			})
+		} else {
+			g.Go(func() error {
+				var err error
+				cert, err = GetSMValue(ctx, sm, cfg.SMConfig.CertificateString)
+				log.Debugf("Certificate: %s", cert)
+				return err
+			})
 
-		g.Go(func() error {
-			var err error
-			// TODO @shipperizer remove config pkg dependency
-			key, err = GetSMValue(ctx, sm, cfg.SMConfig.KeyString)
-			log.Debugf("key: %s", key)
-			return err
-		})
+			g.Go(func() error {
+				var err error
+				key, err = GetSMValue(ctx, sm, cfg.SMConfig.KeyString)
+				log.Debugf("key: %s", key)
+				return err
+			})
+		}
 
 		err = g.Wait() // wait and check for error
 
 		if err != nil {
-			return nil, fmt.Errorf("Issues fetching SM values: %s", err)
+			return nil, fmt.Errorf("issues fetching SM values: %s", err)
 		}
 	}
 
 	var tls *tls.Config
 
-	tls, err = MakeTLS(cert, key)
+	tls, err = MakeTLS(cert, key, cfg.UseP12)
 
 	if err != nil {
-		return nil, fmt.Errorf("Issues with the TLS config: %s", err)
+		return nil, fmt.Errorf("issues with the TLS config: %s", err)
 	}
 
 	return tls, nil
@@ -72,8 +81,24 @@ func GetTLS(cfg TLSConfig) (*tls.Config, error) {
 
 // MakeTLS generates a tls.Config, kindly stolen from
 // https://github.com/discovery-digital/entitlements-collection/blob/master/kafkaclient/client.go#L230
-func MakeTLS(clientCert, key []byte) (*tls.Config, error) {
+func MakeTLS(clientCert, key []byte, isP12 bool) (*tls.Config, error) {
+	var err error
+
+	// if isP12 is true then clientCert is in p12 format
+	if isP12 {
+		clientCert, key, err = DecodeP12(clientCert)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	cert, err := tls.X509KeyPair(clientCert, key)
+
+	if err != nil {
+		return nil, err
+	}
+
 	log.Debugf("Key: %s", key)
 	log.Debugf("Client Cert: %s", clientCert)
 	log.Debugf("Cert: %v", cert)
@@ -95,7 +120,7 @@ func MakeTLS(clientCert, key []byte) (*tls.Config, error) {
 	for _, cert := range DecodePEM(clientCert).Certificate {
 		x509Cert, err := x509.ParseCertificate(cert)
 		if err != nil {
-			log.Errorf("Issue parsing cert PEM: %s", err.Error())
+			log.Errorf("issue parsing cert PEM: %s", err.Error())
 		}
 		rootCAs.AddCert(x509Cert)
 	}
@@ -105,7 +130,7 @@ func MakeTLS(clientCert, key []byte) (*tls.Config, error) {
 
 	return &tls.Config{
 		RootCAs:            rootCAs,
-		InsecureSkipVerify: false,
+		InsecureSkipVerify: true,
 		Certificates:       []tls.Certificate{cert},
 	}, nil
 }
@@ -123,5 +148,32 @@ func DecodePEM(certPEM []byte) tls.Certificate {
 			cert.Certificate = append(cert.Certificate, certDER.Bytes)
 		}
 	}
+
 	return cert
+}
+
+func DecodeP12(p12 []byte) ([]byte, []byte, error) {
+
+	privateKey, cert, _, err := pkcs12.DecodeChain(p12, "")
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rsaPk, ok := privateKey.(*rsa.PrivateKey)
+
+	if !ok {
+		return nil, nil, err
+	}
+
+	rsaPkBytes, err := x509.MarshalPKCS8PrivateKey(rsaPk)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	privateKeyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: rsaPkBytes})
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
+
+	return certPEM, privateKeyPEM, nil
 }
