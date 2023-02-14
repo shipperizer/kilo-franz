@@ -52,7 +52,7 @@ func (p *Producer) Publish(topicNickname string, messages ...MessageInterface) e
 		return err
 	}
 
-	cfg, ok := w.Config().(config.WriterConfigInterface)
+	cfg, ok := w.Config().(core.WriterConfigInterface)
 
 	if !ok {
 		panic("cannot parse refreshable config into config.WriterConfigInterface")
@@ -128,7 +128,7 @@ func (p *Producer) unwrapWriter(topicNickname string) (*kafka.Writer, error) {
 }
 
 // NewProducer creates a new object implementing ProducerInterface
-func NewProducer(monitor monitoring.MonitorInterface, refreshables ...config.RefreshableInterface) ProducerInterface {
+func NewProducer(monitor monitoring.MonitorInterface, refreshables ...core.RefreshableInterface) *Producer {
 	p := new(Producer)
 
 	p.topics = make(map[string]string)
@@ -136,7 +136,7 @@ func NewProducer(monitor monitoring.MonitorInterface, refreshables ...config.Ref
 	p.mutexes = make(map[string]*sync.RWMutex)
 
 	for _, ref := range refreshables {
-		cfg, ok := ref.Config().(config.WriterConfigInterface)
+		cfg, ok := ref.Config().(core.WriterConfigInterface)
 
 		if !ok {
 			panic("cannot parse refreshable config into config.WriterConfigInterface")

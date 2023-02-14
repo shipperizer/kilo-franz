@@ -9,13 +9,13 @@ package encoder
 //
 // type ProtoEncoder struct{}
 //
-// func (e *ProtoEncoder) Encode(msg interface{}) ([]byte, error) {
-// 	return proto.Marshal(msg)
-// }
+//	func (e *ProtoEncoder) Encode(msg interface{}) ([]byte, error) {
+//		return proto.Marshal(msg)
+//	}
 //
-// func NewProtoEncoder() EncoderInterface {
-// 	return &ProtoEncoder{}
-// }
+//	func NewProtoEncoder() EncoderInterface {
+//		return &ProtoEncoder{}
+//	}
 type EncoderInterface interface {
 	Encode(msg interface{}) ([]byte, error)
 }

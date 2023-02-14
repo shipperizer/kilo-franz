@@ -6,16 +6,20 @@ import (
 	"time"
 
 	gomock "github.com/golang/mock/gomock"
+	uuid "github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
-	uuid "github.com/satori/go.uuid"
 	"github.com/shipperizer/kilo-franz/config"
 	"github.com/shipperizer/kilo-franz/core"
+	"github.com/shipperizer/kilo-franz/logging"
 	"github.com/shipperizer/kilo-franz/publisher"
 	"github.com/stretchr/testify/assert"
 )
 
-//go:generate mockgen -package subscriber -destination ./mock_monitor.go -source=../monitoring/interfaces.go MonitorInterface
-//go:generate mockgen -package subscriber -destination ./mock_service.go . ServiceInterface
+//go:generate mockgen -build_flags=--mod=mod -package subscriber -destination ./mock_service.go . ServiceInterface
+//go:generate mockgen -build_flags=--mod=mod -package subscriber -destination ./mock_core.go -source=../core/interfaces.go
+//go:generate mockgen -build_flags=--mod=mod -package subscriber -destination ./mock_monitor.go -source=../monitoring/interfaces.go
+//go:generate mockgen -build_flags=--mod=mod -package subscriber -destination ./mock_config.go -source=../config/interfaces.go
+//go:generate mockgen -build_flags=--mod=mod -package subscriber -destination ./mock_refresh.go -source=../refresh/interfaces.go
 
 func TestNewStandardConsumerReturnsInterfaceImplementation(t *testing.T) {
 	type EnvSpec struct {
@@ -34,15 +38,26 @@ func TestNewStandardConsumerReturnsInterfaceImplementation(t *testing.T) {
 
 	executed := false
 
-	groupID := fmt.Sprintf("test.%s", uuid.NewV4().String())
-	cfg := config.NewConfig(1*time.Hour, nil, nil)
+	groupID := fmt.Sprintf("test.%s", uuid.New().String())
+	cfg := config.NewConfig(1*time.Hour, nil, nil, nil)
 	readerCfg := config.NewReaderConfig(cfg, specs.BootstrapServers, specs.Topic, groupID, 3, 15*time.Second)
 	reader := core.NewReader(readerCfg)
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockMonitor := NewMockMonitorInterface(ctrl)
+	mockMetric := NewMockMetricInterface(ctrl)
 	mockSvc := NewMockServiceInterface(ctrl)
+
+	mockSvc.EXPECT().TaskName().AnyTimes().Return("test")
+	mockMonitor.EXPECT().AddMetrics(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	// autorefresher
+	mockMonitor.EXPECT().AddMetrics(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	mockMonitor.EXPECT().GetMetric(gomock.Any()).AnyTimes().Return(mockMetric, nil)
+
+	mockMetric.EXPECT().Inc(gomock.Any()).AnyTimes()
+	mockMetric.EXPECT().Set(gomock.Any(), gomock.Any()).AnyTimes()
+	mockMetric.EXPECT().Observe(gomock.Any(), gomock.Any()).AnyTimes()
 
 	mockSvc.EXPECT().Flow(gomock.Any(), gomock.Any()).AnyTimes().DoAndReturn(
 		func(MessageKey, MessageValue []byte) error {
@@ -50,9 +65,6 @@ func TestNewStandardConsumerReturnsInterfaceImplementation(t *testing.T) {
 			return nil
 		},
 	)
-	mockSvc.EXPECT().TaskName().AnyTimes().Return("test")
-	mockMonitor.EXPECT().Incr(gomock.Any(), gomock.Any()).AnyTimes()
-	mockMonitor.EXPECT().Gauge(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
 	assert := assert.New(t)
 
@@ -98,8 +110,8 @@ func TestNewStandardConsumerNotBlockingRefreshIfNoMessages(t *testing.T) {
 
 	refresh := false
 
-	groupID := fmt.Sprintf("test.%s", uuid.NewV4().String())
-	cfg := config.NewConfig(5*time.Millisecond, nil, config.NewLogger())
+	groupID := fmt.Sprintf("test.%s", uuid.New().String())
+	cfg := config.NewConfig(5*time.Millisecond, nil, nil, logging.NewLogger())
 	readerCfg := config.NewReaderConfig(cfg, specs.BootstrapServers, specs.Topic, groupID, 3, 10*time.Millisecond)
 	reader := core.NewReader(readerCfg)
 
@@ -107,23 +119,24 @@ func TestNewStandardConsumerNotBlockingRefreshIfNoMessages(t *testing.T) {
 	defer ctrl.Finish()
 	mockMonitor := NewMockMonitorInterface(ctrl)
 	mockSvc := NewMockServiceInterface(ctrl)
+	mockMetric := NewMockMetricInterface(ctrl)
+	mockMetricRefresh := NewMockMetricInterface(ctrl)
 
 	mockSvc.EXPECT().TaskName().AnyTimes().Return("test")
+	mockSvc.EXPECT().Flow(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
+	mockMonitor.EXPECT().AddMetrics(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	// autorefresher
+	mockMonitor.EXPECT().AddMetrics(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	mockMonitor.EXPECT().GetService().AnyTimes()
-	mockMonitor.EXPECT().Gauge(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	mockSvc.EXPECT().TaskName().AnyTimes().Return("test")
-	mockMonitor.EXPECT().Incr(gomock.Any(), gomock.Any()).AnyTimes().MinTimes(2).Do(
-		func(metric string, l map[string]string) {
-			switch metric {
-			case "errors":
-				if task, ok := l["task"]; ok {
-					if task == "tls-refresh" {
-						refresh = true
-					}
-				}
-			case "refresh_subscriber_v1":
-				refresh = true
-			}
+	mockMonitor.EXPECT().GetMetric("labs_stream_refresh_subscriber_v1").AnyTimes().Return(mockMetricRefresh, nil)
+	mockMonitor.EXPECT().GetMetric(gomock.Any()).AnyTimes().Return(mockMetric, nil)
+	mockMetric.EXPECT().Inc(gomock.Any()).AnyTimes()
+	mockMetric.EXPECT().Set(gomock.Any(), gomock.Any()).AnyTimes()
+	mockMetric.EXPECT().Observe(gomock.Any(), gomock.Any()).AnyTimes()
+
+	mockMetricRefresh.EXPECT().Inc(gomock.Any()).AnyTimes().Do(
+		func(tags map[string]string) {
+			refresh = true
 		},
 	)
 
@@ -140,4 +153,98 @@ func TestNewStandardConsumerNotBlockingRefreshIfNoMessages(t *testing.T) {
 	time.Sleep(5000 * time.Millisecond)
 
 	assert.True(refresh, "autorefresh should have run")
+}
+
+func TestStandardConsumerRefreshableConfigFail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	reader := NewMockRefreshableInterface(ctrl)
+	reader.EXPECT().Config().Return(nil).Times(1)
+
+	mockMonitor := NewMockMonitorInterface(ctrl)
+	mockSvc := NewMockServiceInterface(ctrl)
+
+	assert := assert.New(t)
+
+	_, err := NewStandardConsumer(reader, mockSvc, mockMonitor)
+	assert.NotNil(err)
+}
+
+func TestStandardConsumerInterfaceTypeFails(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRefresher := NewMockRefreshableInterface(ctrl)
+	mockRefresher.EXPECT().Config().Return(struct{}{}).Times(1)
+
+	mockMonitor := NewMockMonitorInterface(ctrl)
+	mockSvc := NewMockServiceInterface(ctrl)
+
+	assert := assert.New(t)
+
+	_, err := NewStandardConsumer(mockRefresher, mockSvc, mockMonitor)
+	assert.NotNil(err)
+}
+
+func TestStandardConsumerStatsPanics(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	assert := assert.New(t)
+
+	autoRefresh := NewMockAutoRefreshXInterface(ctrl)
+	autoRefresh.EXPECT().Stats().Return(struct{}{}).Times(1)
+
+	c := StandardConsumer{af: autoRefresh}
+
+	assert.Panics(func() { c.Stats() })
+}
+
+func TestStandardConsumerUnwrapReaderFail1(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	assert := assert.New(t)
+
+	autoRefresh := NewMockAutoRefreshXInterface(ctrl)
+	autoRefresh.EXPECT().Object(gomock.Any()).Return(&core.Reader{}, fmt.Errorf("boom")).Times(1)
+
+	c := StandardConsumer{af: autoRefresh}
+
+	_, err := c.unwrapReader()
+
+	assert.NotNil(err)
+}
+
+func TestStandardConsumerUnwrapReaderFail2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	assert := assert.New(t)
+
+	mockRefresher := NewMockRefreshableInterface(ctrl)
+	autoRefresh := NewMockAutoRefreshXInterface(ctrl)
+	autoRefresh.EXPECT().Object(gomock.Any()).Return(mockRefresher, nil).Times(1)
+
+	c := StandardConsumer{af: autoRefresh}
+
+	_, err := c.unwrapReader()
+
+	assert.NotNil(err)
+}
+
+func TestStandardConsumerUnwrapReaderFail3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	assert := assert.New(t)
+
+	mockRefresher := NewMockRefreshableInterface(ctrl)
+	autoRefresh := NewMockAutoRefreshXInterface(ctrl)
+	autoRefresh.EXPECT().Object(gomock.Any()).Return(mockRefresher, nil).Times(1)
+
+	c := StandardConsumer{af: autoRefresh}
+
+	_, err := c.unwrapReader()
+
+	assert.NotNil(err)
 }

@@ -25,10 +25,11 @@ func TestNewReaderReturnsReader(t *testing.T) {
 
 	assert.Nilf(err, "Env vars are misconfigured: %v", specs)
 
-	cfg := config.NewConfig(1*time.Hour, nil, nil)
+	cfg := config.NewConfig(1*time.Hour, nil, nil, nil)
 	readerCfg := config.NewReaderConfig(cfg, specs.BootstrapServers, specs.Topic, "my-test", 3, 1*time.Minute)
 
 	r := NewReader(readerCfg)
+	defer r.Close()
 
 	assert.IsType(&Reader{}, r, "A pointer to Reader should be returned")
 
@@ -50,15 +51,14 @@ func TestReaderRenewsKafkaReader(t *testing.T) {
 
 	assert.Nilf(err, "Env vars are misconfigured: %v", specs)
 
-	cfg := config.NewConfig(1*time.Hour, nil, nil)
+	cfg := config.NewConfig(1*time.Hour, nil, nil, nil)
 	readerCfg := config.NewReaderConfig(cfg, specs.BootstrapServers, specs.Topic, "my-test", 3, 1*time.Minute)
 
 	r1 := NewReader(readerCfg)
 
-	assert.NotEqual(r1.Renew(nil), r1, "Reader object should have been renewed")
-
 	rr1, _ := r1.Get(context.TODO())
-	rr2, _ := r1.Renew(nil).Get(context.TODO())
+	r1.Renew(nil, nil)
+	rr2, _ := r1.Get(context.TODO())
 	assert.NotEqual(rr1, rr2, "kafka.Reader objects should have been renewed")
 }
 func TestReaderStatsAreReaderStats(t *testing.T) {
@@ -74,7 +74,7 @@ func TestReaderStatsAreReaderStats(t *testing.T) {
 
 	assert.Nilf(err, "Env vars are misconfigured: %v", specs)
 
-	cfg := config.NewConfig(1*time.Hour, nil, nil)
+	cfg := config.NewConfig(1*time.Hour, nil, nil, nil)
 	readerCfg := config.NewReaderConfig(cfg, specs.BootstrapServers, specs.Topic, "my-test", 3, 1*time.Minute)
 
 	r1 := NewReader(readerCfg)
@@ -97,11 +97,11 @@ func TestReaderConfigIsWriterConfigInterface(t *testing.T) {
 
 	assert.Nilf(err, "Env vars are misconfigured: %v", specs)
 
-	cfg := config.NewConfig(1*time.Hour, nil, nil)
+	cfg := config.NewConfig(1*time.Hour, nil, nil, nil)
 	readerCfg := config.NewReaderConfig(cfg, specs.BootstrapServers, specs.Topic, "my-test", 3, 1*time.Minute)
 
 	r1 := NewReader(readerCfg)
 
 	c1 := r1.Config()
-	assert.IsType(&config.ReaderConfig{}, c1.(config.ReaderConfigInterface), "Castable ReaderConfig object should have been returned")
+	assert.IsType(&config.ReaderConfig{}, c1.(ReaderConfigInterface), "Castable ReaderConfig object should have been returned")
 }
