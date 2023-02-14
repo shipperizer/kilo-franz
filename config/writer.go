@@ -40,7 +40,7 @@ func (c *WriterConfig) GetEncoder() enc.EncoderInterface {
 }
 
 // NewWriterConfig creates a new object implementing WriterConfigInterface
-func NewWriterConfig(cfg ConfigInterface, brokers []string, topic, nickname string, async bool, encoder enc.EncoderInterface) WriterConfigInterface {
+func NewWriterConfig(cfg ConfigInterface, brokers []string, topic, nickname string, async bool, encoder enc.EncoderInterface) *WriterConfig {
 	c := WriterConfig{
 		topic:           topic,
 		nickname:        nickname,

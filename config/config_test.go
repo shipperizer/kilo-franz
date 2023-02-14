@@ -5,14 +5,40 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	// @shipperizer lesson learnt: don't name packages so generic, mocking won't like it
+	_tls "github.com/shipperizer/kilo-franz/tls"
 )
 
 func TestNewConfigImplementsInterface(t *testing.T) {
-	cfg := NewConfig(1*time.Hour, nil, nil)
+	cfg := NewConfig(1*time.Hour, nil, nil, nil)
 
 	assert := assert.New(t)
 
-	assert.Equal(1*time.Hour, cfg.GetRefreshTimeout(), "Refresh timeouts should match")
-	assert.Nil(cfg.GetTLSConfig(), "TLS config should be empty")
-	assert.NotNil(cfg.GetLogger(), "Default Logger should be *zap.SugaredLogger if nil is passed")
+	assert.Implements((*ConfigInterface)(nil), cfg)
+}
+
+func TestNewConfigImplementsInterfaceWithTlsConfigFail(t *testing.T) {
+	smClient, err := _tls.SMClient("region", "endpoint")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tlsCfg := &_tls.TLSConfig{
+		UseTLS: true,
+		SMConfig: &_tls.SecretManagerConfig{
+			CertificateString: "cert",
+			KeyString:         "key",
+			SMClient:          smClient,
+		},
+		ClientSignedCertificate: []byte(`cert`),
+		ClientKey:               []byte(`key`),
+	}
+
+	cfg := NewConfig(1*time.Hour, tlsCfg, nil, nil)
+
+	assert := assert.New(t)
+
+	assert.NotNil(cfg)
+	assert.Nil(cfg.getTLS(), "TLS with bad cert")
 }

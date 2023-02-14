@@ -12,8 +12,10 @@ func TestNewReaderConfigImplementsInterface(t *testing.T) {
 	topic := "test.v1"
 	groupID := "test"
 
-	cfg := NewConfig(1*time.Hour, nil, nil)
-	readerCfg := NewReaderConfig(cfg, bootstrapServers, topic, groupID, 3, 1*time.Minute)
+	timeout := 1 * time.Minute
+
+	cfg := NewConfig(1*time.Hour, nil, nil, nil)
+	readerCfg := NewReaderConfig(cfg, bootstrapServers, topic, groupID, 3, timeout)
 
 	assert := assert.New(t)
 
@@ -21,5 +23,6 @@ func TestNewReaderConfigImplementsInterface(t *testing.T) {
 	assert.Equal(3, readerCfg.Workers(), "Workers should match")
 	assert.Equal(topic, readerCfg.GetTopic(), "Topics should match")
 	assert.Equal(groupID, readerCfg.GetGroupID(), "GroupIDs should match")
-	assert.Nil(readerCfg.GetTLS(), "TLS config should be empty")
+	assert.Equal(timeout, readerCfg.GetReadTimeout(), "timeout should match")
+	assert.Nil(readerCfg.GetTLSConfig(), "TLS config should be empty")
 }

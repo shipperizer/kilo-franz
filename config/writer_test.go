@@ -14,7 +14,7 @@ func TestNewWriterConfigImplementsInterface(t *testing.T) {
 	nickname := "test"
 	async := true
 
-	cfg := NewConfig(1*time.Hour, nil, nil)
+	cfg := NewConfig(1*time.Hour, nil, nil, nil)
 	writerCfg := NewWriterConfig(cfg, brokers, topic, nickname, async, nil)
 
 	assert := assert.New(t)
@@ -23,7 +23,7 @@ func TestNewWriterConfigImplementsInterface(t *testing.T) {
 	assert.Equal(topic, writerCfg.GetTopic(), "Topics should match")
 	assert.Equal(nickname, writerCfg.GetNickname(), "Nicknames should match")
 	assert.True(writerCfg.GetAsync(), "Async should be set to true")
-	assert.Nil(writerCfg.GetTLS(), "TLS config should be empty")
+	assert.Nil(writerCfg.GetTLSConfig(), "TLS config should be empty")
 	assert.NotNil(writerCfg.GetEncoder(), "Default Encoder should be JSONEncoder if nil is passed")
 }
 
@@ -33,7 +33,7 @@ func TestNewWriterConfigDefaultEncoderJSON(t *testing.T) {
 	nickname := "test"
 	async := true
 
-	cfg := NewConfig(1*time.Hour, nil, nil)
+	cfg := NewConfig(1*time.Hour, nil, nil, nil)
 	writerCfg := NewWriterConfig(cfg, brokers, topic, nickname, async, nil)
 
 	assert := assert.New(t)
@@ -46,7 +46,7 @@ func TestNewWriterConfigDefaultNicknameIsTopic(t *testing.T) {
 	topic := "test.v1"
 	async := true
 
-	cfg := NewConfig(1*time.Hour, nil, nil)
+	cfg := NewConfig(1*time.Hour, nil, nil, nil)
 	writerCfg := NewWriterConfig(cfg, brokers, topic, "", async, nil)
 
 	assert := assert.New(t)
