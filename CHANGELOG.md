@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/shipperizer/kilo-franz/compare/v1.2.0...v1.2.1) (2023-02-15)
+
+
+### Bug Fixes
+
+* return empty tls config if empty params ([ae2a310](https://github.com/shipperizer/kilo-franz/commit/ae2a310dfaa8d486239010588bd57c51818e8c10))
+
 ## [1.2.0](https://github.com/shipperizer/kilo-franz/compare/v1.1.0...v1.2.0) (2023-02-14)
 
 
