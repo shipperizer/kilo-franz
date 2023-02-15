@@ -82,6 +82,10 @@ func GetTLS(cfg TLSConfig) (*tls.Config, error) {
 // MakeTLS generates a tls.Config, kindly stolen from
 // https://github.com/discovery-digital/entitlements-collection/blob/master/kafkaclient/client.go#L230
 func MakeTLS(clientCert, key []byte, isP12 bool) (*tls.Config, error) {
+	if clientCert == nil && key == nil {
+		return new(tls.Config), nil
+	}
+
 	var err error
 
 	// if isP12 is true then clientCert is in p12 format
