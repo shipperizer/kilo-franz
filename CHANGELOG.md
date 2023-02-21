@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/shipperizer/kilo-franz/compare/v1.2.1...v1.2.2) (2023-02-21)
+
+
+### Bug Fixes
+
+* add useSASL flag on sasl config ([9d08d3d](https://github.com/shipperizer/kilo-franz/commit/9d08d3d8fc1011772883b0f0e44085abcd248e29))
+
 ## [1.2.1](https://github.com/shipperizer/kilo-franz/compare/v1.2.0...v1.2.1) (2023-02-15)
 
 
