@@ -239,7 +239,7 @@ func TestNewAutoRefreshXConfigureNotPanics(t *testing.T) {
 	assert := assert.New(t)
 
 	assert.NotPanics(func() {
-		af.Configure(context.TODO(), &_tls.TLSConfig{UseTLS: true}, sasl.NewSASLConfig("test", "test", sasl.PlainSASL, scram.SHA256, nil, mockLogger))
+		af.Configure(context.TODO(), &_tls.TLSConfig{UseTLS: true}, sasl.NewSASLConfig("test", "test", true, sasl.PlainSASL, scram.SHA256, nil, mockLogger))
 	})
 
 }

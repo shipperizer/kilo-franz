@@ -58,7 +58,7 @@ func TestSASLConfigGetSASLMechanismPlain(t *testing.T) {
 
 	vaultAWS := vault.NewAWSVault(client)
 	cfgSM := NewSecretManagerConfig("sasl/credentials", vaultAWS)
-	cfgSASL := NewSASLConfig("", "", PlainSASL, nil, cfgSM, mockLogger)
+	cfgSASL := NewSASLConfig("", "", true, PlainSASL, nil, cfgSM, mockLogger)
 
 	assert := assert.New(t)
 
@@ -105,7 +105,7 @@ func TestSASLConfigGetSASLMechanismScram(t *testing.T) {
 
 	vaultAWS := vault.NewAWSVault(client)
 	cfgSM := NewSecretManagerConfig("sasl/credentials", vaultAWS)
-	cfgSASL := NewSASLConfig("", "", ScramSASL, scram.SHA256, cfgSM, mockLogger)
+	cfgSASL := NewSASLConfig("", "", true, ScramSASL, scram.SHA256, cfgSM, mockLogger)
 
 	assert := assert.New(t)
 
@@ -152,7 +152,7 @@ func TestSASLConfigGetCredentials(t *testing.T) {
 
 	vaultAWS := vault.NewAWSVault(client)
 	cfgSM := NewSecretManagerConfig("sasl/credentials", vaultAWS)
-	cfgSASL := NewSASLConfig("", "", ScramSASL, scram.SHA256, cfgSM, logging.NewLogger())
+	cfgSASL := NewSASLConfig("", "", true, ScramSASL, scram.SHA256, cfgSM, logging.NewLogger())
 
 	assert := assert.New(t)
 
@@ -199,7 +199,7 @@ func TestSASLConfigGetCredentialsBadSecret(t *testing.T) {
 
 	vaultAWS := vault.NewAWSVault(client)
 	cfgSM := NewSecretManagerConfig("sasl/fake", vaultAWS)
-	cfgSASL := NewSASLConfig("default", "default", ScramSASL, scram.SHA256, cfgSM, mockLogger)
+	cfgSASL := NewSASLConfig("default", "default", true, ScramSASL, scram.SHA256, cfgSM, mockLogger)
 
 	assert := assert.New(t)
 
@@ -217,7 +217,7 @@ func TestSASLConfigGetCredentialsNoSM(t *testing.T) {
 	mockLogger.EXPECT().Errorf(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Warn(gomock.Any()).AnyTimes()
 
-	cfgSASL := NewSASLConfig("default", "default", ScramSASL, scram.SHA256, nil, mockLogger)
+	cfgSASL := NewSASLConfig("default", "default", true, ScramSASL, scram.SHA256, nil, mockLogger)
 
 	assert := assert.New(t)
 
@@ -225,4 +225,51 @@ func TestSASLConfigGetCredentialsNoSM(t *testing.T) {
 
 	assert.Equal("default", username)
 	assert.Equal("default", password)
+}
+
+func TestSASLConfigGetSASLMechanismWithSASLDisabled(t *testing.T) {
+	type EnvSpec struct {
+		Region   string `envconfig:"aws_region"`
+		Endpoint string `envconfig:"aws_sm_endpoint"`
+	}
+
+	var specs EnvSpec
+	_ = envconfig.Process("", &specs)
+
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...interface{}) (aws.Endpoint, error) {
+		if service == secretsmanager.ServiceID && specs.Endpoint != "" {
+			return aws.Endpoint{
+				URL:           specs.Endpoint,
+				SigningRegion: specs.Region,
+			}, nil
+		}
+		// Returning EndpointNotFoundError will allow the service to fallback to it's default resolution.
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+
+	cfg, _ := config.LoadDefaultConfig(
+		context.TODO(),
+		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithRegion(specs.Region),
+	)
+
+	client := secretsmanager.NewFromConfig(cfg)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockLogger := NewMockLoggerInterface(ctrl)
+
+	mockLogger.EXPECT().Errorf(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Warn(gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug(gomock.Any()).AnyTimes()
+
+	vaultAWS := vault.NewAWSVault(client)
+	cfgSM := NewSecretManagerConfig("sasl/credentials", vaultAWS)
+	cfgSASL := NewSASLConfig("", "", false, PlainSASL, nil, cfgSM, mockLogger)
+
+	assert := assert.New(t)
+
+	sasl := cfgSASL.GetSASLMechanism()
+
+	assert.Nil(sasl)
 }

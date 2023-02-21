@@ -35,6 +35,7 @@ func NewSecretManagerConfig(credentialsKey string, vault VaultInterface) *Secret
 type SASLConfig struct {
 	username  string
 	password  string
+	useSASL   bool
 	saslType  SASLType
 	algorithm scram.Algorithm
 
@@ -71,6 +72,11 @@ func (c *SASLConfig) getCredentials(ctx context.Context) (string, string) {
 }
 
 func (c *SASLConfig) GetSASLMechanism() sasl.Mechanism {
+	if !c.useSASL {
+		c.logger.Debug("SASL disabled")
+		return nil
+	}
+
 	username, password := c.getCredentials(context.TODO())
 
 	switch c.saslType {
@@ -93,11 +99,12 @@ func (c *SASLConfig) GetSASLMechanism() sasl.Mechanism {
 	}
 }
 
-func NewSASLConfig(username, password string, saslType SASLType, algorithm scram.Algorithm, smConfig *SecretManagerConfig, logger logging.LoggerInterface) *SASLConfig {
+func NewSASLConfig(username, password string, useSASL bool, saslType SASLType, algorithm scram.Algorithm, smConfig *SecretManagerConfig, logger logging.LoggerInterface) *SASLConfig {
 	c := new(SASLConfig)
 
 	c.username = username
 	c.password = password
+	c.useSASL = useSASL
 	c.saslType = saslType
 	c.algorithm = algorithm
 	c.smConfig = smConfig

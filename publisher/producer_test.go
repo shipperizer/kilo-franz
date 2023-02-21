@@ -135,7 +135,7 @@ func TestProducerSASLPublishSucceeds(t *testing.T) {
 
 	vaultAWS := vault.NewAWSVault(client)
 	cfgSM := sasl.NewSecretManagerConfig("sasl/credentials", vaultAWS)
-	cfgSASL := sasl.NewSASLConfig("", "", sasl.PlainSASL, nil, cfgSM, mockLogger)
+	cfgSASL := sasl.NewSASLConfig("", "", true, sasl.PlainSASL, nil, cfgSM, mockLogger)
 
 	writerCfg := config.NewWriterConfig(
 		config.NewConfig(1*time.Hour, nil, cfgSASL, mockLogger),

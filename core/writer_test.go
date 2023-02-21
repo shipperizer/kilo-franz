@@ -152,7 +152,7 @@ func TestWriterWithSASL(t *testing.T) {
 
 	vaultAWS := vault.NewAWSVault(client)
 	cfgSM := sasl.NewSecretManagerConfig("sasl/credentials", vaultAWS)
-	cfgSASL := sasl.NewSASLConfig("", "", sasl.PlainSASL, nil, cfgSM, mockLogger)
+	cfgSASL := sasl.NewSASLConfig("", "", true, sasl.PlainSASL, nil, cfgSM, mockLogger)
 
 	assert := assert.New(t)
 
