@@ -16,7 +16,7 @@ jobs:
           release-type: simple
           package-name: ""
         id: release
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Workaround for https://github.com/googleapis/release-please/issues/922
         if: ${{ steps.release.outputs.pr != '' }}    
         run: |
