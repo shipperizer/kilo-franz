@@ -109,6 +109,6 @@ jobs:
           AWS_REGION: eu-west-1
           AWS_ENDPOINT: http://localstack:4566
           AWS_SM_ENDPOINT: http://localstack:4566
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           files: ./coverage.out
