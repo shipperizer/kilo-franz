@@ -4,7 +4,7 @@ import (
 	enc "github.com/shipperizer/kilo-franz/encoder"
 )
 
-// WriterConfig is a config for the core.Writer, holds subscriber informations
+// WriterConfig is a config for the core.Writer, holds publisher information.
 type WriterConfig struct {
 	brokers  []string // strings.Split(viper.GetString("kafka.url"), ",")
 	topic    string

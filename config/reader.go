@@ -2,7 +2,7 @@ package config
 
 import "time"
 
-// ReaderConfig is a config for the core.Reader, holds subscriber informations
+// ReaderConfig is a config for the core.Reader, holds subscriber information.
 type ReaderConfig struct {
 	bootstrapServers []string // strings.Split(viper.GetString("kafka.url"), ",")
 	topic            string
@@ -27,7 +27,7 @@ func (c *ReaderConfig) GetTopic() string {
 	return c.topic
 }
 
-// GetBootstapServers returns the kafka url the config is pointing to
+// GetBootstrapServers returns the Kafka broker URLs the config is pointing to.
 func (c *ReaderConfig) GetBootstrapServers() []string {
 	return c.bootstrapServers
 }
