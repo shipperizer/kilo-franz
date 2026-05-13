@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.19 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.22 AS builder
 
 ARG SKAFFOLD_GO_GCFLAGS
 ARG TARGETOS

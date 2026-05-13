@@ -18,7 +18,7 @@ type SecretsManagerAPI interface {
 // `endpoint` arg can be used when developing locally.
 func SMClient(region, endpoint string) (SecretsManagerAPI, error) {
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, opts ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, opts ...any) (aws.Endpoint, error) {
 		if service == secretsmanager.ServiceID && endpoint != "" {
 			return aws.Endpoint{
 				URL:           endpoint,
@@ -41,7 +41,7 @@ func SMClient(region, endpoint string) (SecretsManagerAPI, error) {
 	return secretsmanager.NewFromConfig(cfg), nil
 }
 
-// TODO @shipperizer mvoe this to be a method and enhance the SecretsManagerAPI or split it and wrap it
+// TODO @shipperizer move this to be a method and enhance the SecretsManagerAPI or split it and wrap it
 func GetSMValue(ctx context.Context, secretsManager SecretsManagerAPI, key string) ([]byte, error) {
 	secret, err := secretsManager.GetSecretValue(
 		ctx,

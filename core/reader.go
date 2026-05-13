@@ -31,7 +31,7 @@ type Reader struct {
 }
 
 // Renew creates a new kafka.Reader with the new tls and sasl configs passed in and updates the instance
-func (r *Reader) Renew(tlsCfg config.TLSConfigInterface, saslConfig config.SASLConfigInterface, args ...interface{}) {
+func (r *Reader) Renew(tlsCfg config.TLSConfigInterface, saslConfig config.SASLConfigInterface, args ...any) {
 	cfg := config.NewReaderConfig(
 		config.NewConfig(r.cfg.GetRefreshTimeout(), tlsCfg, saslConfig, r.cfg.GetLogger()),
 		r.cfg.GetBootstrapServers(),
@@ -46,12 +46,12 @@ func (r *Reader) Renew(tlsCfg config.TLSConfigInterface, saslConfig config.SASLC
 }
 
 // Stats returns a copy of kafka.ReaderStats (will need to be casted)
-func (r *Reader) Stats() interface{} {
+func (r *Reader) Stats() any {
 	return r.reader.Stats()
 }
 
 // Config returns the internal ReaderConfigInterface (will need to be casted)
-func (r *Reader) Config() interface{} {
+func (r *Reader) Config() any {
 	return r.cfg
 }
 
@@ -61,7 +61,7 @@ func (r *Reader) Close() {
 }
 
 // Get returns the internal reader object (will need to be casted) if present
-func (r *Reader) Get(ctx context.Context) (interface{}, error) {
+func (r *Reader) Get(ctx context.Context) (any, error) {
 	if r.reader == nil {
 		r.reader = getReader(r.cfg)
 	}

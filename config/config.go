@@ -49,7 +49,7 @@ func (c *Config) GetDialer() *kafka.Dialer {
 	return dialer
 }
 
-// getTLS returns a crypto/tls Config pointer made from the insatnce attribute c.tlsConfig
+// getTLS returns a crypto/tls Config pointer made from the instance attribute c.tlsConfig
 func (c *Config) getTLS() *tls.Config {
 	if c.tlsConfig == nil {
 		return nil
@@ -65,7 +65,7 @@ func (c *Config) getTLS() *tls.Config {
 	return cfg
 }
 
-// getSASL returns a crypto/tls Config pointer made from the insatnce attribute c.tlsConfig
+// getSASL returns a sasl.Mechanism made from the instance attribute c.saslConfig
 func (c *Config) getSASL() sasl.Mechanism {
 	if c.saslConfig == nil {
 		return nil

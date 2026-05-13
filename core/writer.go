@@ -30,7 +30,7 @@ type Writer struct {
 }
 
 // Renew creates a new kafka.Writer with the new tls config passed in and updates the instance
-func (w *Writer) Renew(tlsConfig config.TLSConfigInterface, saslConfig config.SASLConfigInterface, args ...interface{}) {
+func (w *Writer) Renew(tlsConfig config.TLSConfigInterface, saslConfig config.SASLConfigInterface, args ...any) {
 	cfg := config.NewWriterConfig(
 		config.NewConfig(w.cfg.GetRefreshTimeout(), tlsConfig, saslConfig, w.cfg.GetLogger()),
 		w.cfg.GetBrokers(),
@@ -45,12 +45,12 @@ func (w *Writer) Renew(tlsConfig config.TLSConfigInterface, saslConfig config.SA
 }
 
 // Stats returns a copy of kafka.ReaderStats (will need to be casted)
-func (w *Writer) Stats() interface{} {
+func (w *Writer) Stats() any {
 	return w.writer.Stats()
 }
 
 // Config returns the internal ReaderConfigInterface (will need to be casted)
-func (w *Writer) Config() interface{} {
+func (w *Writer) Config() any {
 	return w.cfg
 }
 
@@ -60,7 +60,7 @@ func (w *Writer) Close() {
 }
 
 // Get returns the internal reader object (will need to be casted) if present
-func (w *Writer) Get(ctx context.Context) (interface{}, error) {
+func (w *Writer) Get(ctx context.Context) (any, error) {
 	if w.writer == nil {
 		w.writer = getWriter(w.cfg)
 	}

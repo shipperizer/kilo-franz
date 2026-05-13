@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 	uuid "github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/shipperizer/kilo-franz/config"

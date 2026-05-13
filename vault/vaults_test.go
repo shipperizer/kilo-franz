@@ -21,7 +21,7 @@ func TestAWSVault(t *testing.T) {
 	var specs EnvSpec
 	_ = envconfig.Process("", &specs)
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...any) (aws.Endpoint, error) {
 		if service == secretsmanager.ServiceID && specs.Endpoint != "" {
 			return aws.Endpoint{
 				URL:           specs.Endpoint,
@@ -58,7 +58,7 @@ func TestAWSVaultGetValueStringSuccessful(t *testing.T) {
 	var specs EnvSpec
 	_ = envconfig.Process("", &specs)
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...any) (aws.Endpoint, error) {
 		if service == secretsmanager.ServiceID && specs.Endpoint != "" {
 			return aws.Endpoint{
 				URL:           specs.Endpoint,
@@ -98,7 +98,7 @@ func TestAWSVaultGetValueStringNotFound(t *testing.T) {
 	var specs EnvSpec
 	_ = envconfig.Process("", &specs)
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...any) (aws.Endpoint, error) {
 		if service == secretsmanager.ServiceID && specs.Endpoint != "" {
 			return aws.Endpoint{
 				URL:           specs.Endpoint,
@@ -136,7 +136,7 @@ func TestAWSVaultGetValueBinarySuccessful(t *testing.T) {
 	var specs EnvSpec
 	_ = envconfig.Process("", &specs)
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...any) (aws.Endpoint, error) {
 		if service == secretsmanager.ServiceID && specs.Endpoint != "" {
 			return aws.Endpoint{
 				URL:           specs.Endpoint,

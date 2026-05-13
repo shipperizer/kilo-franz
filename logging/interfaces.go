@@ -1,14 +1,14 @@
 package logging
 
 type LoggerInterface interface {
-	Errorf(string, ...interface{})
-	Infof(string, ...interface{})
-	Warnf(string, ...interface{})
-	Debugf(string, ...interface{})
-	Fatalf(string, ...interface{})
-	Error(...interface{})
-	Info(...interface{})
-	Warn(...interface{})
-	Debug(...interface{})
-	Fatal(...interface{})
+	Errorf(string, ...any)
+	Infof(string, ...any)
+	Warnf(string, ...any)
+	Debugf(string, ...any)
+	Fatalf(string, ...any)
+	Error(...any)
+	Info(...any)
+	Warn(...any)
+	Debug(...any)
+	Fatal(...any)
 }

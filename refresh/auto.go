@@ -176,7 +176,7 @@ func (af *AutoRefreshX) Stop() {
 }
 
 // Stats returns reader or writer stats (will need to be casted)
-func (af *AutoRefreshX) Stats() interface{} {
+func (af *AutoRefreshX) Stats() any {
 	// lock reads for af.obj
 	af.mutexObj.RLock()
 	defer af.mutexObj.RUnlock()
@@ -208,7 +208,7 @@ func NewAutoRefreshX(ctx context.Context, cfg AutoRefreshXConfigInterface, refre
 	af.configCh = make(chan channelConfig)
 	af.shutdownCh = make(chan bool)
 	// set refreshable to the one passed in and cast it to core.RefreshableInterface
-	// line below will panig
+	// line below will panic
 	if refreshable == nil {
 		panic("refreshable object is empty, needs to be a core.Reader or core.Writer")
 	}

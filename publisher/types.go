@@ -5,7 +5,7 @@ import uuid "github.com/google/uuid"
 // Message is an abstraction based around kafka.Message
 type Message struct {
 	key   []byte
-	value interface{}
+	value any
 }
 
 // GetKey returns the key of the message
@@ -14,12 +14,12 @@ func (m *Message) GetKey() []byte {
 }
 
 // GetValue returns the value of the message
-func (m *Message) GetValue() interface{} {
+func (m *Message) GetValue() any {
 	return m.value
 }
 
 // NewMessage creates a new object implementing MessageInterface
-func NewMessage(key string, value interface{}) MessageInterface {
+func NewMessage(key string, value any) MessageInterface {
 	msg := &Message{
 		key:   []byte(key),
 		value: value,
