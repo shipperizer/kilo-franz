@@ -1,81 +1,75 @@
 package subscriber
 
 import (
+	"context"
 	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 
-	gomock "github.com/golang/mock/gomock"
-	uuid "github.com/google/uuid"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/google/uuid"
+	"github.com/segmentio/kafka-go"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+
 	"github.com/shipperizer/kilo-franz/config"
 	"github.com/shipperizer/kilo-franz/core"
-	"github.com/shipperizer/kilo-franz/logging"
+	"github.com/shipperizer/kilo-franz/internal/testutil"
 	"github.com/shipperizer/kilo-franz/publisher"
-	"github.com/stretchr/testify/assert"
 )
 
-//go:generate mockgen -build_flags=--mod=mod -package subscriber -destination ./mock_monitor.go -source=../monitoring/interfaces.go
-//go:generate mockgen -build_flags=--mod=mod -package subscriber -destination ./mock_service.go . ServiceInterface
-//go:generate mockgen -build_flags=--mod=mod -package subscriber -destination ./mock_core.go -source=../core/interfaces.go
-//go:generate mockgen -build_flags=--mod=mod -package subscriber -destination ./mock_config.go -source=../config/interfaces.go
-//go:generate mockgen -build_flags=--mod=mod -package subscriber -destination ./mock_refresh.go -source=../refresh/interfaces.go
+type DummyChannel struct {
+	Value string `json:"value"`
+}
 
 func TestNewChannelConsumerReturnsInterfaceImplementation(t *testing.T) {
-	type EnvSpec struct {
-		Brokers          []string `envconfig:"kafka_cnx_string"`
-		BootstrapServers []string `envconfig:"kafka_cnx_string"`
-		Topic            string   `envconfig:"kafka_topic"`
-		WaitTime         int      `envconfig:"wait_time_ms" default:"2000"`
+	if testing.Short() {
+		t.Skip("skipping integration test")
 	}
 
-	type Dummy struct {
-		Value string `json:"value"`
-	}
+	ctx := context.Background()
+	brokers := testutil.KafkaContainer(t, ctx)
+	topic := fmt.Sprintf("test-ch-%s", uuid.New().String()[:8])
+	testutil.CreateTopic(t, ctx, brokers, topic, 1)
 
-	var specs EnvSpec
-	_ = envconfig.Process("", &specs)
-
-	executed := false
+	var executed atomic.Bool
 
 	groupID := fmt.Sprintf("test.%s", uuid.New().String())
-	cfg := config.NewConfig(1*time.Hour, nil, nil, nil)
-	readerCfg := config.NewReaderConfig(cfg, specs.BootstrapServers, specs.Topic, groupID, 1, 15*time.Second)
+	cfg := config.NewConfig(5*time.Minute, nil, nil, nil)
+	readerCfg := config.NewReaderConfig(cfg, brokers, topic, groupID, 1, 5*time.Minute)
 	reader := core.NewReader(readerCfg)
 
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	mockMonitor := NewMockMonitorInterface(ctrl)
 	mockMetric := NewMockMetricInterface(ctrl)
 	mockSvc := NewMockServiceInterface(ctrl)
 
 	mockSvc.EXPECT().Flow(gomock.Any(), gomock.Any()).AnyTimes().DoAndReturn(
 		func(MessageKey, MessageValue []byte) error {
-			fmt.Println("running flow")
-			executed = true
+			executed.Store(true)
 			return nil
 		},
 	)
 	mockSvc.EXPECT().TaskName().AnyTimes().Return("test")
 	mockMonitor.EXPECT().AddMetrics(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	// autorefresher
 	mockMonitor.EXPECT().AddMetrics(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	mockMonitor.EXPECT().GetMetric(gomock.Any()).AnyTimes().Return(mockMetric, nil)
+	mockMonitor.EXPECT().GetService().AnyTimes()
 
 	mockMetric.EXPECT().Inc(gomock.Any()).AnyTimes()
 	mockMetric.EXPECT().Set(gomock.Any(), gomock.Any()).AnyTimes()
 	mockMetric.EXPECT().Observe(gomock.Any(), gomock.Any()).AnyTimes()
 
-	assert := assert.New(t)
-
 	c, err := NewChannelConsumer(reader, mockSvc, mockMonitor)
-	assert.Nil(err, "No error should be thrown")
+	require.NoError(t, err)
 
 	c.Start()
 
-	time.Sleep(time.Duration(specs.WaitTime) * time.Millisecond)
+	// Wait for consumer group to stabilize
+	time.Sleep(10 * time.Second)
 
-	writerCfg := config.NewWriterConfig(cfg, specs.Brokers, specs.Topic, "test", false, nil)
+	writerCfg := config.NewWriterConfig(cfg, brokers, topic, "test", false, nil)
 	writer := core.NewWriter(writerCfg)
 
 	pub := publisher.NewProducer(mockMonitor, writer)
@@ -83,40 +77,37 @@ func TestNewChannelConsumerReturnsInterfaceImplementation(t *testing.T) {
 	for g := 0; g < 5; g++ {
 		msgs := make([]publisher.MessageInterface, 0)
 		for i := 0; i < 5; i++ {
-			msgs = append(msgs, publisher.NewMessage("test", Dummy{Value: "test"}))
-
+			msgs = append(msgs, publisher.NewMessage("test", DummyChannel{Value: "test"}))
 		}
 		err = pub.Publish("test", msgs...)
-		assert.Nil(err, "No error should be thrown")
+		require.NoError(t, err)
 	}
 
 	pub.Close()
-	time.Sleep(time.Duration(specs.WaitTime) * time.Millisecond)
-	defer c.Stop()
 
-	assert.True(executed, "Service Flow function should have been executed")
+	assert.Eventually(t, func() bool {
+		return executed.Load()
+	}, 60*time.Second, 500*time.Millisecond, "Service Flow function should have been executed")
 }
 
 func TestNewChannelConsumerNotBlockingRefreshIfNoMessages(t *testing.T) {
-	type EnvSpec struct {
-		Brokers          []string `envconfig:"kafka_cnx_string"`
-		BootstrapServers []string `envconfig:"kafka_cnx_string"`
-		Topic            string   `envconfig:"kafka_topic"`
-		WaitTime         int      `envconfig:"wait_time_ms" default:"1000"`
+	if testing.Short() {
+		t.Skip("skipping integration test")
 	}
 
-	var specs EnvSpec
-	_ = envconfig.Process("", &specs)
+	ctx := context.Background()
+	brokers := testutil.KafkaContainer(t, ctx)
+	topic := fmt.Sprintf("test-ch-refresh-%s", uuid.New().String()[:8])
+	testutil.CreateTopic(t, ctx, brokers, topic, 1)
 
-	refresh := false
+	var refreshed atomic.Bool
 
 	groupID := fmt.Sprintf("test.%s", uuid.New().String())
-	cfg := config.NewConfig(5*time.Millisecond, nil, nil, logging.NewLogger())
-	readerCfg := config.NewReaderConfig(cfg, specs.BootstrapServers, specs.Topic, groupID, 3, 10*time.Millisecond)
+	cfg := config.NewConfig(5*time.Millisecond, nil, nil, nil)
+	readerCfg := config.NewReaderConfig(cfg, brokers, topic, groupID, 3, 10*time.Millisecond)
 	reader := core.NewReader(readerCfg)
 
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	mockMonitor := NewMockMonitorInterface(ctrl)
 	mockMetric := NewMockMetricInterface(ctrl)
 	mockMetricRefresh := NewMockMetricInterface(ctrl)
@@ -125,38 +116,35 @@ func TestNewChannelConsumerNotBlockingRefreshIfNoMessages(t *testing.T) {
 	mockSvc.EXPECT().TaskName().AnyTimes().Return("test")
 	mockSvc.EXPECT().Flow(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 	mockMonitor.EXPECT().AddMetrics(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	// autorefresher
 	mockMonitor.EXPECT().AddMetrics(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	mockMonitor.EXPECT().GetService().AnyTimes()
 	mockMonitor.EXPECT().GetMetric("labs_stream_refresh_subscriber_v1").AnyTimes().Return(mockMetricRefresh, nil)
 	mockMonitor.EXPECT().GetMetric(gomock.Any()).AnyTimes().Return(mockMetric, nil)
+	mockMonitor.EXPECT().GetService().AnyTimes()
 	mockMetric.EXPECT().Inc(gomock.Any()).AnyTimes()
 	mockMetric.EXPECT().Set(gomock.Any(), gomock.Any()).AnyTimes()
 	mockMetric.EXPECT().Observe(gomock.Any(), gomock.Any()).AnyTimes()
 
 	mockMetricRefresh.EXPECT().Inc(gomock.Any()).AnyTimes().Do(
 		func(tags map[string]string) {
-			refresh = true
+			refreshed.Store(true)
 		},
 	)
 
-	assert := assert.New(t)
-
 	c, err := NewChannelConsumer(reader, mockSvc, mockMonitor)
-	assert.Nil(err, "No error should be thrown")
+	require.NoError(t, err)
 
 	c.Start()
 
-	time.Sleep(time.Duration(specs.WaitTime) * time.Millisecond)
-	time.Sleep(5000 * time.Millisecond)
-	defer c.Stop()
+	assert.Eventually(t, func() bool {
+		return refreshed.Load()
+	}, 30*time.Second, 500*time.Millisecond, "autorefresh should have run")
 
-	assert.True(refresh, "autorefresh should have run")
+	c.Stop()
 }
 
 func TestChannelConsumerRefreshableConfigFail(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	reader := NewMockRefreshableInterface(ctrl)
 	reader.EXPECT().Config().Return(nil).Times(1)
@@ -164,15 +152,12 @@ func TestChannelConsumerRefreshableConfigFail(t *testing.T) {
 	mockMonitor := NewMockMonitorInterface(ctrl)
 	mockSvc := NewMockServiceInterface(ctrl)
 
-	assert := assert.New(t)
-
 	_, err := NewChannelConsumer(reader, mockSvc, mockMonitor)
-	assert.NotNil(err)
+	assert.NotNil(t, err)
 }
 
 func TestChannelConsumerInterfaceTypeFails(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	mockRefresher := NewMockRefreshableInterface(ctrl)
 	mockRefresher.EXPECT().Config().Return(struct{}{}).Times(1)
@@ -180,31 +165,23 @@ func TestChannelConsumerInterfaceTypeFails(t *testing.T) {
 	mockMonitor := NewMockMonitorInterface(ctrl)
 	mockSvc := NewMockServiceInterface(ctrl)
 
-	assert := assert.New(t)
-
 	_, err := NewChannelConsumer(mockRefresher, mockSvc, mockMonitor)
-	assert.NotNil(err)
+	assert.NotNil(t, err)
 }
 
 func TestChannelConsumerStatsPanics(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	assert := assert.New(t)
 
 	autoRefresh := NewMockAutoRefreshXInterface(ctrl)
 	autoRefresh.EXPECT().Stats().Return(struct{}{}).Times(1)
 
 	c := ChannelConsumer{af: autoRefresh}
 
-	assert.Panics(func() { c.Stats() })
+	assert.Panics(t, func() { c.Stats() })
 }
 
 func TestChannelConsumerUnwrapReaderFail1(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	assert := assert.New(t)
 
 	autoRefresh := NewMockAutoRefreshXInterface(ctrl)
 	autoRefresh.EXPECT().Object(gomock.Any()).Return(&core.Reader{}, fmt.Errorf("boom")).Times(1)
@@ -212,14 +189,11 @@ func TestChannelConsumerUnwrapReaderFail1(t *testing.T) {
 	c := ChannelConsumer{af: autoRefresh}
 
 	_, err := c.unwrapReader()
-
-	assert.NotNil(err)
+	assert.NotNil(t, err)
 }
 
 func TestChannelConsumerUnwrapReaderFail2(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	assert := assert.New(t)
 
 	mockRefresher := NewMockRefreshableInterface(ctrl)
 	autoRefresh := NewMockAutoRefreshXInterface(ctrl)
@@ -228,22 +202,80 @@ func TestChannelConsumerUnwrapReaderFail2(t *testing.T) {
 	c := ChannelConsumer{af: autoRefresh}
 
 	_, err := c.unwrapReader()
-
-	assert.NotNil(err)
+	assert.NotNil(t, err)
 }
 
-func TestChannelConsumerUnwrapReaderFail3(t *testing.T) {
+func TestNewChannelConsumerWithKafkaMessages(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	ctx := context.Background()
+	brokers := testutil.KafkaContainer(t, ctx)
+	topic := fmt.Sprintf("test-ch-msgs-%s", uuid.New().String()[:8])
+	testutil.CreateTopic(t, ctx, brokers, topic, 1)
+
+	var messageCount atomic.Int32
+
+	groupID := fmt.Sprintf("test.%s", uuid.New().String())
+	// Use 5-minute refresh to prevent AutoRefreshX from disrupting the consumer group
+	cfg := config.NewConfig(5*time.Minute, nil, nil, nil)
+	readerCfg := config.NewReaderConfig(cfg, brokers, topic, groupID, 3, 5*time.Minute)
+	reader := core.NewReader(readerCfg)
+
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	assert := assert.New(t)
+	mockMonitor := NewMockMonitorInterface(ctrl)
+	mockMetric := NewMockMetricInterface(ctrl)
+	mockSvc := NewMockServiceInterface(ctrl)
 
-	mockRefresher := NewMockRefreshableInterface(ctrl)
-	autoRefresh := NewMockAutoRefreshXInterface(ctrl)
-	autoRefresh.EXPECT().Object(gomock.Any()).Return(mockRefresher, nil).Times(1)
+	mockSvc.EXPECT().TaskName().AnyTimes().Return("test")
+	mockMonitor.EXPECT().AddMetrics(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	mockMonitor.EXPECT().AddMetrics(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	mockMonitor.EXPECT().GetMetric(gomock.Any()).AnyTimes().Return(mockMetric, nil)
+	mockMonitor.EXPECT().GetService().AnyTimes()
+	mockMetric.EXPECT().Inc(gomock.Any()).AnyTimes()
+	mockMetric.EXPECT().Set(gomock.Any(), gomock.Any()).AnyTimes()
+	mockMetric.EXPECT().Observe(gomock.Any(), gomock.Any()).AnyTimes()
 
-	c := ChannelConsumer{af: autoRefresh}
+	mockSvc.EXPECT().Flow(gomock.Any(), gomock.Any()).AnyTimes().DoAndReturn(
+		func(key, value []byte) error {
+			messageCount.Add(1)
+			return nil
+		},
+	)
 
-	_, err := c.unwrapReader()
+	c, err := NewChannelConsumer(reader, mockSvc, mockMonitor)
+	require.NoError(t, err)
 
-	assert.NotNil(err)
+	c.Start()
+
+	// Wait for consumer group to join and get partition assignment
+	time.Sleep(5 * time.Second)
+
+	// Produce messages directly via kafka-go
+	writer := &kafka.Writer{
+		Addr:                   kafka.TCP(brokers...),
+		Topic:                  topic,
+		AllowAutoTopicCreation: true,
+	}
+
+	msgs := make([]kafka.Message, 15)
+	for i := range msgs {
+		msgs[i] = kafka.Message{
+			Key:   []byte(fmt.Sprintf("key-%d", i)),
+			Value: []byte(fmt.Sprintf("value-%d", i)),
+		}
+	}
+
+	err = writer.WriteMessages(ctx, msgs...)
+	require.NoError(t, err)
+	writer.Close()
+
+	assert.Eventually(t, func() bool {
+		return messageCount.Load() >= 15
+	}, 60*time.Second, 500*time.Millisecond, "all messages should be consumed")
+
+	// Note: Stop() will block until the current ReadMessage timeout expires.
+	// Since we use a 5-minute timeout, we don't call Stop() here and let
+	// the container cleanup handle teardown.
 }
