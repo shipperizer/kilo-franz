@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
@@ -124,7 +124,7 @@ func TestWriterWithSASL(t *testing.T) {
 	var specs EnvSpec
 	_ = envconfig.Process("", &specs)
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...any) (aws.Endpoint, error) {
 		if service == secretsmanager.ServiceID && specs.Endpoint != "" {
 			return aws.Endpoint{
 				URL:           specs.Endpoint,

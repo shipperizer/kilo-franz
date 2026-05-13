@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"github.com/shipperizer/kilo-franz/vault"
 )
 
@@ -27,7 +27,7 @@ func TestTLSConfigWithVault(t *testing.T) {
 	var specs EnvSpec
 	_ = envconfig.Process("", &specs)
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...any) (aws.Endpoint, error) {
 		if service == secretsmanager.ServiceID && specs.Endpoint != "" {
 			return aws.Endpoint{
 				URL:           specs.Endpoint,
@@ -73,7 +73,7 @@ func TestTLSConfigWithoutVault(t *testing.T) {
 	var specs EnvSpec
 	_ = envconfig.Process("", &specs)
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...any) (aws.Endpoint, error) {
 		if service == secretsmanager.ServiceID && specs.Endpoint != "" {
 			return aws.Endpoint{
 				URL:           specs.Endpoint,
@@ -123,7 +123,7 @@ func TestTLSConfigWithVaultP12(t *testing.T) {
 	var specs EnvSpec
 	_ = envconfig.Process("", &specs)
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, r string, options ...any) (aws.Endpoint, error) {
 		if service == secretsmanager.ServiceID && specs.Endpoint != "" {
 			return aws.Endpoint{
 				URL:           specs.Endpoint,
