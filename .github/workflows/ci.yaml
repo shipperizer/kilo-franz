@@ -14,7 +14,7 @@ jobs:
     name: Test
     # This job runs on Linux
     runs-on: ubuntu-latest
-    container: golang:1.19
+    container: golang:1.24
 
     services:
       zookeeper:
