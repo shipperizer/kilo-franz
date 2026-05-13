@@ -2,7 +2,7 @@ package config
 
 import "time"
 
-// ReaderConfig is a config for the core.Reader, holds subscriber informations
+// ReaderConfig is a config for the core.Reader, holds subscriber information
 type ReaderConfig struct {
 	bootstrapServers []string // strings.Split(viper.GetString("kafka.url"), ",")
 	topic            string
