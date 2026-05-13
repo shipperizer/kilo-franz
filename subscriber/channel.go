@@ -95,7 +95,7 @@ func (c *ChannelConsumer) unwrapReader() (*kafka.Reader, error) {
 	r, err := c.af.Object(context.TODO())
 
 	if err != nil {
-		return nil, fmt.Errorf("failed fetching kafka reader: %s", err)
+		return nil, fmt.Errorf("failed fetching kafka reader: %w", err)
 
 	}
 
@@ -108,7 +108,7 @@ func (c *ChannelConsumer) unwrapReader() (*kafka.Reader, error) {
 	rrI, err := r.Get(context.TODO())
 
 	if err != nil {
-		return nil, fmt.Errorf("failed fetching kafka reader interface: %s", err)
+		return nil, fmt.Errorf("failed fetching kafka reader interface: %w", err)
 
 	}
 

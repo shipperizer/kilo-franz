@@ -94,7 +94,7 @@ func (c *TLSConfig) GetTLS() (*_tls.Config, error) {
 	err = g.Wait() // wait and check for error
 
 	if err != nil {
-		return nil, fmt.Errorf("issues fetching SM values: %s", err)
+		return nil, fmt.Errorf("issues fetching SM values: %w", err)
 	}
 
 	return MakeTLS(cert, key, c.UseP12)

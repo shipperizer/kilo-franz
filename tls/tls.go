@@ -64,7 +64,7 @@ func GetTLS(cfg TLSConfig) (*tls.Config, error) {
 		err = g.Wait() // wait and check for error
 
 		if err != nil {
-			return nil, fmt.Errorf("issues fetching SM values: %s", err)
+			return nil, fmt.Errorf("issues fetching SM values: %w", err)
 		}
 	}
 
@@ -73,7 +73,7 @@ func GetTLS(cfg TLSConfig) (*tls.Config, error) {
 	tls, err = MakeTLS(cert, key, cfg.UseP12)
 
 	if err != nil {
-		return nil, fmt.Errorf("issues with the TLS config: %s", err)
+		return nil, fmt.Errorf("issues with the TLS config: %w", err)
 	}
 
 	return tls, nil
