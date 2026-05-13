@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/sasl/scram"
