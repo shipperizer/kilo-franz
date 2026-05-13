@@ -1,0 +1,17 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: kilo-franz-examples
+build:
+  artifacts:
+    - image: example-consumer
+      context: .
+      docker:
+        dockerfile: examples/consumer/Dockerfile
+    - image: example-publisher
+      context: .
+      docker:
+        dockerfile: examples/publisher/Dockerfile
+manifests:
+  rawYaml:
+    - deployments/k8s/*.yaml

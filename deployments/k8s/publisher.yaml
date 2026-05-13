@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-publisher
+  labels:
+    app: example-publisher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example-publisher
+  template:
+    metadata:
+      labels:
+        app: example-publisher
+    spec:
+      containers:
+        - name: publisher
+          image: example-publisher
+          env:
+            - name: KAFKA_URL
+              value: "kafka:9092"
+            - name: KAFKA_TOPIC
+              value: "test"
+            - name: KAFKA_TOPIC_NICKNAME
+              value: "test"
