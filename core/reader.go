@@ -22,9 +22,9 @@ func getReader(cfg ReaderConfigInterface) *kafka.Reader {
 	return kafka.NewReader(c)
 }
 
-// Reader is an abstraction object on top of kakfa.Reader
-// it holds the creation config as attribute and a pointer to the reader itself
-// it implements RefreshableInterface so that can be used by AutoRefreshX
+// Reader is an abstraction on top of kafka.Reader.
+// It holds the creation config as an attribute and a pointer to the reader itself.
+// It implements [RefreshableInterface] so that it can be used by AutoRefreshX.
 type Reader struct {
 	reader *kafka.Reader
 	cfg    ReaderConfigInterface

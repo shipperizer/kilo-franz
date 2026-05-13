@@ -38,7 +38,7 @@ func (p *Producer) ListTopics() map[string]string {
 	return p.topics
 }
 
-// Publihs is the main method of the class, used to write messages on kafka
+// Publish is the main method of the class, used to write messages on Kafka.
 func (p *Producer) Publish(topicNickname string, messages ...MessageInterface) error {
 	writer, err := p.unwrapWriter(topicNickname)
 
@@ -87,10 +87,10 @@ func (p *Producer) Stats(topicNickname string) kafka.WriterStats {
 		return stats
 	}
 
-	panic("producer writer is setup incorrectly, not of type *kafka.Witer")
+	panic("producer writer is setup incorrectly, not of type *kafka.Writer")
 }
 
-// unwrapWriter is a helper methods to remove the different interfaces and reach the final kafka.Writer
+// unwrapWriter is a helper method to unwrap the interfaces and reach the underlying kafka.Writer.
 func (p *Producer) unwrapWriter(topicNickname string) (*kafka.Writer, error) {
 	w, ok := p.af[topicNickname]
 

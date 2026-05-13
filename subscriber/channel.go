@@ -90,7 +90,7 @@ type ChannelConsumer struct {
 	logger logging.LoggerInterface
 }
 
-// unwrapReader is a helper methods to remove the different interfaces and reach the final kafka.Reader
+// unwrapReader is a helper method to unwrap the interfaces and reach the underlying kafka.Reader.
 func (c *ChannelConsumer) unwrapReader() (*kafka.Reader, error) {
 	r, err := c.af.Object(context.TODO())
 

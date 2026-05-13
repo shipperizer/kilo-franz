@@ -21,9 +21,9 @@ func getWriter(cfg WriterConfigInterface) *kafka.Writer {
 	)
 }
 
-// Writer is an abstraction object on top of kakfa.Writer
-// it holds the creation config as attribute and a pointer to the writer itself
-// it implements RefreshableInterface so that can be used by AutoRefreshX
+// Writer is an abstraction on top of kafka.Writer.
+// It holds the creation config as an attribute and a pointer to the writer itself.
+// It implements [RefreshableInterface] so that it can be used by AutoRefreshX.
 type Writer struct {
 	writer *kafka.Writer
 	cfg    WriterConfigInterface
