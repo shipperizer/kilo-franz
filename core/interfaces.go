@@ -30,9 +30,9 @@ type WriterConfigInterface interface {
 
 // RefreshableInterface is implemented by core.Writer and core.Reader so that they can be refreshed by AutoRefreshX
 type RefreshableInterface interface {
-	Get(context.Context) (interface{}, error)
-	Config() interface{}
+	Get(context.Context) (any, error)
+	Config() any
 	Close()
-	Stats() interface{}
-	Renew(config.TLSConfigInterface, config.SASLConfigInterface, ...interface{})
+	Stats() any
+	Renew(config.TLSConfigInterface, config.SASLConfigInterface, ...any)
 }

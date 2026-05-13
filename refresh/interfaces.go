@@ -12,7 +12,7 @@ import (
 type AutoRefreshXInterface interface {
 	Configure(context.Context, config.TLSConfigInterface, config.SASLConfigInterface)
 	Object(context.Context) (core.RefreshableInterface, error)
-	Stats() interface{}
+	Stats() any
 	Refresh(context.Context) (core.RefreshableInterface, error)
 	Stop()
 }

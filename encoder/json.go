@@ -2,13 +2,13 @@ package encoder
 
 import "encoding/json"
 
-// JSONEncoder is the default encoder for publihsers/producers
+// JSONEncoder is the default encoder for publishers/producers
 // it implements the EncoderInterface and simply marshals an interface to json
 type JSONEncoder struct{}
 
 // Encode is the only method, needs to return ([]byte, error), in this case simply a wrapper around
-// the json.Marshal funcrton
-func (e *JSONEncoder) Encode(msg interface{}) ([]byte, error) {
+// the json.Marshal function
+func (e *JSONEncoder) Encode(msg any) ([]byte, error) {
 	return json.Marshal(msg)
 }
 
