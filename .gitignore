@@ -25,3 +25,7 @@ id_rsa
 
 # gomocks auto-generated
 **/mock_*.go
+
+# compiled example binaries
+consumer
+publisher

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-consumer
+  labels:
+    app: example-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example-consumer
+  template:
+    metadata:
+      labels:
+        app: example-consumer
+    spec:
+      containers:
+        - name: consumer
+          image: example-consumer
+          env:
+            - name: KAFKA_URL
+              value: "kafka:9092"
+            - name: KAFKA_TOPIC
+              value: "test"
+            - name: KAFKA_GROUP_ID
+              value: "example-consumer.cgroup"
