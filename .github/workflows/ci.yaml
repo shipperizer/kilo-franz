@@ -18,9 +18,10 @@ jobs:
 
     services:
       kafka:
-        image: bitnami/kafka:latest
+        image: bitnamilegacy/kafka:3.3
         env:
           ALLOW_PLAINTEXT_LISTENER: "yes"
+          KAFKA_CFG_NODE_ID: 1
           KAFKA_CFG_LISTENERS: CONTROLLER://:9095,INTERNAL://:9094,SASL_CLIENT://:9093,CLIENT://:9092
           KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://:9094,SASL_CLIENT://kafka:9093,CLIENT://kafka:9092
           KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
