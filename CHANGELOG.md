@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/shipperizer/kilo-franz/compare/v1.2.2...v1.3.0) (2026-10-15)
+
+
+### Features
+
+* implement openspec refactor and integration machinery ([834dea7](https://github.com/shipperizer/kilo-franz/commit/834dea7133b6fc58ba82af3554309b4b5bc26df8))
+
+
+### Bug Fixes
+
+* use reader read timeout instead of refresh timeout in channel consumer ([b1a608f](https://github.com/shipperizer/kilo-franz/commit/b1a608fae76c34fbfd7f1d017261bce9cfc6dfa9))
+
 ## [1.2.2](https://github.com/shipperizer/kilo-franz/compare/v1.2.1...v1.2.2) (2023-02-21)
 
 
