@@ -304,7 +304,7 @@ func NewChannelConsumer(refreshable core.RefreshableInterface, svc ServiceInterf
 	consumer.groupID = cfg.GetGroupID()
 	consumer.workers = cfg.Workers()
 	consumer.logger = cfg.GetLogger()
-	consumer.readTimeout = cfg.GetRefreshTimeout()
+	consumer.readTimeout = cfg.GetReadTimeout()
 
 	consumer.messageCh = make(chan kafka.Message, consumer.workers)
 	consumer.shutdownCh = make(chan bool)
