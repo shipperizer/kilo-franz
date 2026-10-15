@@ -44,7 +44,7 @@ jobs:
           LOG4J_LOGGER_ORG_APACHE_KAFKA: TRACE
         # options: --health-cmd "nc -zv kafka 9092 || exit -1" --health-start-period "120s" --health-timeout "5s" --health-retries "10"
       localstack:
-        image: localstack/localstack
+        image: localstack/localstack:3.8.0
         env:
           SERVICES: secretsmanager
           AWS_ACCESS_KEY_ID: 0
