@@ -5,9 +5,27 @@
 [![codecov](https://codecov.io/gh/shipperizer/kilo-franz/branch/main/graph/badge.svg)](https://codecov.io/gh/shipperizer/kilo-franz)
 [![Go Reference](https://pkg.go.dev/badge/github.com/shipperizer/kilo-franz.svg)](https://pkg.go.dev/github.com/shipperizer/kilo-franz)
 
-Library used for dealing with Kafka consumers and producers
+Kilo Franz is a small Go library that wraps [segmentio/kafka-go](https://github.com/segmentio/kafka-go)
+to provide opinionated Kafka consumers and producers. It takes care of TLS/SASL
+refresh, reader/writer lifecycle management, pluggable encoders, and a producer
+that can target multiple topics through nicknames.
 
 ***Uses segmentio/kafka-go v0.4.17***
+
+
+## Examples
+
+Runnable, minimal examples live under [`examples/`](./examples):
+
+- [`examples/config`](./examples/config) - build a `config.Config` with no external dependencies.
+- [`examples/encoder`](./examples/encoder) - encode a struct with `encoder.NewJSONEncoder` and pretty print it.
+
+Run them with:
+
+```sh
+go run ./examples/config
+go run ./examples/encoder
+```
 
 
 ## Release process
@@ -18,6 +36,61 @@ To have a better look at API reference do `godoc -http=:6060` and then check the
 
 
 # HOWTO
+
+## Minimal consumer
+
+```go
+cfg := config.NewConfig(5*time.Minute, nil, nil, nil)
+
+readerCfg := config.NewReaderConfig(
+	cfg,
+	[]string{"localhost:9092"},
+	"events",
+	"my-service.cgroup",
+	1,
+)
+
+reader := core.NewReader(readerCfg)
+
+consumer, err := subscriber.NewStandardConsumer(reader, myService, monitor)
+if err != nil {
+	panic(err)
+}
+
+consumer.Start()
+
+c := make(chan os.Signal, 1)
+signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+<-c
+
+consumer.Stop()
+```
+
+## Minimal producer
+
+```go
+cfg := config.NewConfig(5*time.Minute, nil, nil, nil)
+
+writerCfg := config.NewWriterConfig(
+	cfg,
+	[]string{"localhost:9092"},
+	"events",
+	"events",
+	false,
+	encoder.NewJSONEncoder(),
+)
+
+writer := core.NewWriter(writerCfg)
+producer := publisher.NewProducer(monitor, writer)
+
+if err := producer.Publish("events", publisher.NewMessage("", map[string]string{"hello": "world"})); err != nil {
+	panic(err)
+}
+
+producer.Close()
+```
+
+## Consumer (full example)
 
 * to create a consumer:
 

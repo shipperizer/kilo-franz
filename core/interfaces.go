@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/segmentio/kafka-go"
+
 	"github.com/shipperizer/kilo-franz/config"
 	"github.com/shipperizer/kilo-franz/encoder"
 )
@@ -35,4 +37,18 @@ type RefreshableInterface interface {
 	Close()
 	Stats() interface{}
 	Renew(config.TLSConfigInterface, config.SASLConfigInterface, ...interface{})
+}
+
+// KafkaReader describes the subset of kafka-go reader methods used by consumers.
+type KafkaReader interface {
+	ReadMessage(ctx context.Context) (kafka.Message, error)
+	Close() error
+	Stats() kafka.ReaderStats
+}
+
+// KafkaWriter describes the subset of kafka-go writer methods used by producers.
+type KafkaWriter interface {
+	WriteMessages(ctx context.Context, msgs ...kafka.Message) error
+	Close() error
+	Stats() kafka.WriterStats
 }

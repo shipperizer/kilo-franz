@@ -50,3 +50,7 @@ secretsmanager:
 topics:
 	$(KAFKA_CLI_PATH)/kafka-topics.sh --create --bootstrap-server $(KAFKA_HOST) --replication-factor 1 --partitions 100 --topic $(TOPIC_NAME)
 .PHONY: topics
+
+integration:
+	$(GO) test -tags=integration ./tests/integration/...
+.PHONY: integration
